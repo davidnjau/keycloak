@@ -30,6 +30,21 @@ import java.util.stream.Collectors;
 @Slf4j
 public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
+    /**
+     * TODO: 1. Add Redis cache for user info on the get userDetails method to improve efficiency
+     * 2. Implement password hashing and salting for user passwords
+     * 3. Implement email verification and password reset functionality
+     * 4. Implement role-based access control (RBAC)
+     * 5. Implement user profile management and update functionality
+     * 6. Implement refresh token functionality
+     * 7. Implement user account management and update functionality
+     * 8. Implement user account lockout and password expiration functionality
+     * 9. Implement user account deletion functionality
+     * 10. Implement user account recovery and password reset functionality
+     * 11. Update Login and Logout functionality; Wrong credentials should be handled appropriately
+     *
+     */
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final KeycloakProperties keycloakProperties;
     private final Keycloak keycloak; // Injected as a @Bean
