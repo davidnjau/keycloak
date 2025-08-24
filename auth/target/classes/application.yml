@@ -1,15 +1,6 @@
 server:
   port: 8099
 
-#keycloak:
-#  server-url: http://localhost:8999
-#  realm: master
-#  client-id: admin-cli
-#  client-secret: 7WQKx8RuVv6ta5laSKHMpVuUDuoye0kq
-#  admin-username: keycloakadmin
-#  admin-password: keycloakpassword
-#  principle-attribute: preferred_username
-
 keycloak:
   server-url: http://localhost:8999
   realm: keycloak-spring-boot-realm

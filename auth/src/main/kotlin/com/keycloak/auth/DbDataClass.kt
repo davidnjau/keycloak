@@ -36,11 +36,10 @@ data class LoginResponse(
 data class UserInfoResponse(
     val userId: String,
     val email: String,
-    val preferredUsername: String,
-    val givenName: String,
-    val familyName: String,
+    val fullName: String,
+    val roles: List<String>,
 ){
-    constructor() : this("", "", "", "", "")
+    constructor() : this("", "", "", arrayListOf())
 }
 data class ApiResponse(
     val statusCode: Int,

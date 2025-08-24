@@ -1,5 +1,7 @@
 package com.keycloak.auth.controller;
 
+import com.keycloak.auth.UserInfoResponse;
+import com.keycloak.auth.service.KeycloakAuthService;
 import lombok.RequiredArgsConstructor;
 import org.jboss.resteasy.spi.NotFoundException;
 import org.keycloak.admin.client.Keycloak;
@@ -23,23 +25,16 @@ import java.util.Map;
 public class UserController {
 
     private final Keycloak keycloak; // Admin client bean
+    private final KeycloakAuthService keycloakAuthService;
 
     /**
      * Get user info from current token
      */
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(Authentication authentication) {
-        JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
-        Jwt jwt = jwtAuth.getToken();
+    public ResponseEntity<UserInfoResponse> getCurrentUser(Authentication authentication) {
 
-        Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("username", jwt.getClaim("preferred_username"));
-        userInfo.put("email", jwt.getClaim("email"));
-        userInfo.put("firstName", jwt.getClaim("given_name"));
-        userInfo.put("lastName", jwt.getClaim("family_name"));
-        userInfo.put("roles", jwt.getClaimAsStringList("roles"));
-
-        return ResponseEntity.ok(userInfo);
+        UserInfoResponse userInfoResponse = keycloakAuthService.getUserInfo(authentication); // Ensure user info is fetched
+        return ResponseEntity.ok(userInfoResponse);
     }
 
     @GetMapping("/{userId}")

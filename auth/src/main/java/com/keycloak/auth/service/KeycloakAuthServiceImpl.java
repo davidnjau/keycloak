@@ -1,33 +1,33 @@
-package com.keycloak.auth;
+package com.keycloak.auth.service;
 
+import com.keycloak.auth.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.OAuth2Constants;
-import org.keycloak.TokenVerifier;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class KeycloakAuthService {
+public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final KeycloakProperties keycloakProperties;
@@ -135,28 +135,34 @@ public class KeycloakAuthService {
 
     }
 
-    public UserInfoResponse getUserInfo(String token) {
+    public UserInfoResponse getUserInfo(Authentication authentication) {
         try {
-            // Parse and verify the token
-//            AccessToken accessToken = TokenVerifier.create(token, AccessToken.class).getToken();
-//
-//            // Extract details
-//            String userId = accessToken.getSubject();   // This is the Keycloak User ID
-//            String username = accessToken.getPreferredUsername();
-//            String email = accessToken.getEmail();
-//            String firstName = accessToken.getGivenName();
-//            String lastName = accessToken.getFamilyName();
-//
-//            System.out.println("********");
-//            System.out.println("accessToken " + accessToken);
-//            System.out.println("username " + username);
-//            System.out.println("email " + email);
-//            System.out.println("firstName " + firstName);
-//            System.out.println("lastName " + lastName);
-//            System.out.println("********");
+
+            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+            Jwt jwt = jwtAuth.getToken();
+
+            String userId = jwt.getSubject();
+            String email = jwt.getClaim("email");
+            String fullName = jwt.getClaim("name");
+            Object realmAccess = jwt.getClaim("realm_access");
+
+            List<String> rolesWithPrefix = new ArrayList<>();
+
+            if (realmAccess instanceof Map) {
+                Map<String, Object> realmAccessMap = (Map<String, Object>) realmAccess;
+
+                Object rolesObj = realmAccessMap.get("roles");
+                if (rolesObj instanceof List) {
+                    List<String> roles = (List<String>) rolesObj;
+
+                    rolesWithPrefix = roles.stream()
+                            .filter(role -> role.startsWith("ROLE_"))
+                            .collect(Collectors.toList());
+                }
+            }
 
             // Build response
-            return new UserInfoResponse("userId", "email", "", "","");
+            return new UserInfoResponse(userId, email, fullName, rolesWithPrefix);
 
         } catch (Exception e) {
             throw new RuntimeException("Invalid token", e);
