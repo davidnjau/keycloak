@@ -19,8 +19,12 @@ keycloak:
   admin-password: keycloakpassword
   principle-attribute: preferred_username
 
-
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
   mvc:
     log-request-details: true
 

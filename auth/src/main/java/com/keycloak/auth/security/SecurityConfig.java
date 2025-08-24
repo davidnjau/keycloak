@@ -64,12 +64,12 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * JwtDecoder bean that fetches public keys from Keycloak’s JWKS endpoint.
-     */
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        String jwkSetUri = keycloakProperties.getTokenUrl();
-        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-    }
+//    /**
+//     * JwtDecoder bean that fetches public keys from Keycloak’s JWKS endpoint.
+//     */
+//    @Bean
+//    public JwtDecoder jwtDecoder() {
+//        String jwkSetUri = keycloakProperties.getTokenUrl();
+//        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+//    }
 }
