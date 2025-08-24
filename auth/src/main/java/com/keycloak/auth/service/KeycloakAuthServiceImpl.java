@@ -8,6 +8,7 @@ import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -167,6 +168,43 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         } catch (Exception e) {
             throw new RuntimeException("Invalid token", e);
         }
+    }
+
+    @Override
+    public UserInfoResponse getUserDetails(String userId) {
+
+        UserResource userResource = keycloak
+                .realm(keycloakProperties.getRealm())
+                .users()
+                .get(userId);
+
+        UserRepresentation user = userResource.toRepresentation();
+        String email = user.getEmail();
+        String fullName = user.getFirstName() + " " + user.getLastName();
+        Boolean isVerified = user.isEmailVerified();
+        Boolean isEnabled = user.isEnabled();
+        List<String> roles = user.getRealmRoles();
+
+        System.out.println("********");
+        System.out.println("email "+email);
+        System.out.println("fullName "+fullName);
+        System.out.println("isVerified "+isVerified);
+        System.out.println("isEnabled "+isEnabled);
+        System.out.println("roles "+roles);
+        System.out.println("********");
+
+        return new UserInfoResponse(userId, email, fullName, roles);
+
+
+//        Map<String, Object> userInfo = new HashMap<>();
+//        userInfo.put("id", user.getId());
+//        userInfo.put("username", user.getUsername());
+//        userInfo.put("email", user.getEmail());
+//        userInfo.put("firstName", user.getFirstName());
+//        userInfo.put("lastName", user.getLastName());
+//        userInfo.put("enabled", user.isEnabled());
+
+//        return null;
     }
 
 }

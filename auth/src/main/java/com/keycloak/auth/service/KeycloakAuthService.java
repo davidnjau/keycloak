@@ -4,7 +4,8 @@ import com.keycloak.auth.*;
 import org.springframework.security.core.Authentication;
 
 public interface KeycloakAuthService {
-    public ApiResponse registerUser(RegisterRequest request);
-    public LoginResponse login(LoginRequest request);
+    ApiResponse registerUser(RegisterRequest request);
+    LoginResponse login(LoginRequest request);
     UserInfoResponse getUserInfo(Authentication authentication);
+    UserInfoResponse getUserDetails(String userId);
 }

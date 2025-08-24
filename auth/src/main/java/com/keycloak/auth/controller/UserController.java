@@ -38,26 +38,8 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable String userId) {
-        try {
-            UserResource userResource = keycloak
-                    .realm("keycloak-spring-boot-realm")
-                    .users()
-                    .get(userId);
-
-            UserRepresentation user = userResource.toRepresentation();
-
-            Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("id", user.getId());
-            userInfo.put("username", user.getUsername());
-            userInfo.put("email", user.getEmail());
-            userInfo.put("firstName", user.getFirstName());
-            userInfo.put("lastName", user.getLastName());
-            userInfo.put("enabled", user.isEnabled());
-
-            return ResponseEntity.ok(userInfo);
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<UserInfoResponse> getUserById(@PathVariable String userId) {
+        UserInfoResponse userInfoResponse = keycloakAuthService.getUserDetails(userId); // Ensure user info is fetched
+        return ResponseEntity.ok(userInfoResponse);
     }
 }
