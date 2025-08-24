@@ -1,0 +1,44 @@
+server:
+  port: 8099
+
+#keycloak:
+#  server-url: http://localhost:8999
+#  realm: master
+#  client-id: admin-cli
+#  client-secret: 7WQKx8RuVv6ta5laSKHMpVuUDuoye0kq
+#  admin-username: keycloakadmin
+#  admin-password: keycloakpassword
+#  principle-attribute: preferred_username
+
+keycloak:
+  server-url: http://localhost:8999
+  realm: keycloak-spring-boot-realm
+  client-id: keycloak-spring-boot-client
+  client-secret: 7WQKx8RuVv6ta5laSKHMpVuUDuoye0kq
+  admin-username: keycloakadmin
+  admin-password: keycloakpassword
+  principle-attribute: preferred_username
+
+
+spring:
+  mvc:
+    log-request-details: true
+
+logging:
+  level:
+    org:
+      springframework:
+        security:
+          web:
+            FilterChainProxy: DEBUG      # Logs which SecurityFilterChain matches
+          authorization: DEBUG           # Logs authorization decisions
+          authentication: DEBUG          # Logs authentication details
+        web:
+          servlet:
+            DispatcherServlet: DEBUG      # Logs request handling
+            mvc:
+              method:
+                annotation: DEBUG         # Logs which @RequestMapping method is chosen
+      keycloak: DEBUG
+
+
