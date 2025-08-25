@@ -43,7 +43,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
      * 3. Implement email verification and password reset functionality
      * 4. Implement role-based access control (RBAC)
      * 5. Implement user profile management and update functionality
-     * 6. Implement refresh token functionality
      * 7. Implement user account management and update functionality
      * 8. Implement user account lockout and password expiration functionality
      * 9. Implement user account deletion functionality
@@ -65,6 +64,8 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             user.setFirstName(request.getFirstName());
             user.setLastName(request.getLastName());
             user.setEmail(request.getEmail());
+
+            user.setEmailVerified(true); // Assuming email verification is done externally
 
             RealmResource realmResource = keycloak.realm(keycloakProperties.getRealm());
             UsersResource usersResource = realmResource.users();
@@ -169,12 +170,13 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             String userId = jwt.getSubject();
             String email = jwt.getClaim("email");
             String fullName = jwt.getClaim("name");
+            String preferred_username = jwt.getClaim("preferred_username");
             Object realmAccess = jwt.getClaim("realm_access");
 
             List<String> rolesWithPrefix = getUserRoles(realmAccess);
 
             // Build response
-            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, rolesWithPrefix);
+            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, preferred_username, rolesWithPrefix);
             return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
 
         } catch (Exception ex) {
@@ -234,6 +236,8 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             UserRepresentation user = userResource.toRepresentation();
             String email = user.getEmail();
             String fullName = user.getFirstName() + " " + user.getLastName();
+            String username = user.getUsername();
+
             Boolean isVerified = user.isEmailVerified();
             Boolean isEnabled = user.isEnabled();
 
@@ -260,7 +264,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             }
 
             List<String> rolesWithPrefix = getUserRoles(roles);
-            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, rolesWithPrefix);
+            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, username, rolesWithPrefix);
             return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
 
         }catch (Exception ex) {
@@ -344,6 +348,135 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
                     "Failed to logout user: " + ex.getMessage());
         }
 
+
+    }
+
+    @Override
+    public ApiResponse updateUser(String userId, UpdateUserRequest request) {
+
+        try{
+
+            UserResource userResource = keycloak.realm(keycloakProperties.getRealm()).users().get(userId);
+            if (userResource == null) {
+                return new ApiResponse(HttpStatus.NOT_FOUND.value(),
+                        "User not found");
+            }
+
+            UserRepresentation user = userResource.toRepresentation();
+
+            // Check each field and update only if non-null (or non-empty in case of collections)
+            if (request.getFirstName() != null && !request.getFirstName().isEmpty()) {
+                user.setFirstName(request.getFirstName());
+            }
+
+            if (request.getLastName() != null && !request.getLastName().isEmpty()) {
+                user.setLastName(request.getLastName());
+            }
+
+            // Ensure username is unique
+            if (request.getUsername() != null) {
+                // Check if username already exists in the realm (case-insensitive)
+                List<UserRepresentation> existingUsers = keycloak.realm(keycloakProperties.getRealm())
+                        .users().search(request.getUsername(), true);
+                if (!existingUsers.isEmpty()){
+                    //List is not empty, so user exists
+                    log.error("User already exists: {}", request.getUsername());
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Username " + request.getUsername() + " already exists.");
+                }
+            }
+
+            // Ensure email is unique
+            if (request.getEmail() != null) {
+                List<UserRepresentation> existingUsers = keycloak.realm(keycloakProperties.getRealm())
+                        .users().search(request.getEmail(), 0, 1);
+                if (!existingUsers.isEmpty()){
+                    //List is not empty, so user exists
+                    log.error("Email already exists: {}", request.getEmail());
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Email " + request.getEmail() + " already exists.");
+                }
+            }
+
+            if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+                user.setEmail(request.getEmail());
+            }
+
+            if (request.getUsername() != null && !request.getUsername().isEmpty()) {
+                user.setUsername(request.getUsername());
+            }
+
+            if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
+                Map<String, List<String>> attributes = user.getAttributes();
+                if (attributes == null) {
+                    attributes = new HashMap<>();
+                }
+                attributes.put("phoneNumber", Collections.singletonList(request.getPhoneNumber()));
+                user.setAttributes(attributes);
+            }
+
+            if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+                RealmResource realmResource = keycloak.realm(keycloakProperties.getRealm());
+
+                // Fetch all available roles in the realm
+                List<RoleRepresentation> availableRoles = realmResource.roles().list();
+                Set<String> availableRoleNames = availableRoles.stream()
+                        .map(RoleRepresentation::getName)
+                        .collect(Collectors.toSet());
+
+                List<String> requestedRoles = request.getRoles();
+
+                // Identify invalid roles
+                List<String> invalidRoles = requestedRoles.stream()
+                        .filter(role -> !availableRoleNames.contains(role))
+                        .collect(Collectors.toList());
+
+                if (!invalidRoles.isEmpty()) {
+                    // Log or throw exception depending on your use case
+                    log.error("Invalid roles requested: {}", invalidRoles);
+                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Invalid roles requested: " + invalidRoles);
+                }
+
+                // Only map valid roles
+                List<RoleRepresentation> roleReps = requestedRoles.stream()
+                        .map(role -> realmResource.roles().get(role).toRepresentation())
+                        .collect(Collectors.toList());
+
+                // Assign roles
+                userResource.roles().realmLevel().add(roleReps);
+            }
+
+            // Always handle booleans, since they’re primitive defaults
+            if (request.getEnabled()!= null) {
+                user.setEnabled(request.getEnabled());
+            }
+            if (request.getEmailVerified() != null){
+                user.setEmailVerified(request.getEmailVerified());
+            }
+
+            // Password reset must be handled separately
+            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+
+                // 🔑 Set password
+                CredentialRepresentation passwordCred = new CredentialRepresentation();
+                passwordCred.setTemporary(false); // false = permanent password
+                passwordCred.setType(CredentialRepresentation.PASSWORD);
+                passwordCred.setValue(request.getPassword()); // assume your request DTO carries password
+
+                userResource.resetPassword(passwordCred);
+
+            }
+
+            // Update user in Keycloak
+            userResource.update(user);
+
+            return new ApiResponse(HttpStatus.OK.value(),
+                    "User updated successfully");
+
+        }catch (Exception ex){
+
+            log.error("Failed to update user: {}", ex.getMessage(), ex);
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(),
+                    "Failed to update user: " + ex.getMessage());
+        }
 
     }
 

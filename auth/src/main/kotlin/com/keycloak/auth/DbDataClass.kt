@@ -42,11 +42,26 @@ data class UserInfoResponse(
     val userId: String,
     val email: String,
     val fullName: String,
+    val username: String,
     val roles: List<String>,
 ){
-    constructor() : this("", "", "", arrayListOf())
+    constructor() : this("", "", "", "", arrayListOf())
 }
 data class ApiResponse(
     val statusCode: Int,
     val details: Any? = null,
+)
+data class UpdateUserRequest(
+    val firstName: String? = null,
+    val lastName: String? = null,
+    val email: String? = null,
+
+    val password: String? = null,
+    val phoneNumber: String? = null,
+    val username: String? = null,
+
+    val roles: List<String>? = emptyList(),
+
+    val enabled: Boolean? = true,
+    val emailVerified: Boolean? = true
 )

@@ -1,9 +1,6 @@
 package com.keycloak.auth.controller;
 
-import com.keycloak.auth.ApiResponse;
-import com.keycloak.auth.LoginRequest;
-import com.keycloak.auth.RefreshTokenDtO;
-import com.keycloak.auth.UserInfoResponse;
+import com.keycloak.auth.*;
 import com.keycloak.auth.service.KeycloakAuthService;
 import lombok.RequiredArgsConstructor;
 import org.jboss.resteasy.spi.NotFoundException;
@@ -50,6 +47,11 @@ public class UserController {
     @GetMapping("/logout")
     public ResponseEntity<ApiResponse> logout(Authentication authentication) {
         ApiResponse apiResponse = keycloakAuthService.logout(authentication); // Ensure user info is fetched
+        return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
+    }
+    @PutMapping("/update-user/{userId}")
+    public ResponseEntity<ApiResponse> updateUser(@PathVariable("userId") String userId, @RequestBody UpdateUserRequest request) {
+        ApiResponse apiResponse = keycloakAuthService.updateUser(userId, request); // Ensure user info is fetched
         return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
     }
 }
