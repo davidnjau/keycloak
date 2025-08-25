@@ -42,11 +42,14 @@ public class UserController {
         ApiResponse apiResponse = keycloakAuthService.getUserDetails(userId); // Ensure user info is fetched
         return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
     }
-
-
     @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponse> refreshToken(@RequestBody RefreshTokenDtO refreshTokenDtO) {
         ApiResponse dbDetails = keycloakAuthService.refreshToken(refreshTokenDtO);
         return ResponseEntity.status(dbDetails.getStatusCode()).body(dbDetails);
+    }
+    @GetMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(Authentication authentication) {
+        ApiResponse apiResponse = keycloakAuthService.logout(authentication); // Ensure user info is fetched
+        return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
     }
 }

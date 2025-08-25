@@ -327,6 +327,26 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
+    @Override
+    public ApiResponse logout(Authentication authentication) {
+
+        try{
+            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+            Jwt jwt = jwtAuth.getToken();
+            String userId = jwt.getSubject();
+            keycloak.realm(keycloakProperties.getRealm()).users().get(userId).logout();
+            return new ApiResponse(HttpStatus.OK.value(),
+                    "User logged out successfully");
+
+        }catch (Exception ex){
+            log.error("Failed to logout user: {}", ex.getMessage(), ex);
+            return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Failed to logout user: " + ex.getMessage());
+        }
+
+
+    }
+
     @NotNull
     private static LoginResponse getLoginResponse(DecodedJWT decodedJWT, String accessToken, String newRefreshToken) {
         Date expirationDate = decodedJWT.getExpiresAt();
@@ -342,12 +362,11 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         long diffMinutes = diffSeconds / 60;
         long diffHours = diffMinutes / 60;
 
-        LoginResponse loginResponse = new LoginResponse(
+        return new LoginResponse(
                 accessToken,
                 newRefreshToken,
                 diffSeconds
         );
-        return loginResponse;
     }
 
 }
