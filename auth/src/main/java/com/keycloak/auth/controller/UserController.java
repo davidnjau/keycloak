@@ -1,5 +1,6 @@
 package com.keycloak.auth.controller;
 
+import com.keycloak.auth.ApiResponse;
 import com.keycloak.auth.UserInfoResponse;
 import com.keycloak.auth.service.KeycloakAuthService;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +39,8 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserInfoResponse> getUserById(@PathVariable String userId) {
-        UserInfoResponse userInfoResponse = keycloakAuthService.getUserDetails(userId); // Ensure user info is fetched
-        return ResponseEntity.ok(userInfoResponse);
+    public ResponseEntity<ApiResponse> getUserById(@PathVariable("userId") String userId) {
+        ApiResponse apiResponse = keycloakAuthService.getUserDetails(userId); // Ensure user info is fetched
+        return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
     }
 }

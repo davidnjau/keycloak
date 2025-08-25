@@ -7,5 +7,5 @@ public interface KeycloakAuthService {
     ApiResponse registerUser(RegisterRequest request);
     LoginResponse login(LoginRequest request);
     UserInfoResponse getUserInfo(Authentication authentication);
-    UserInfoResponse getUserDetails(String userId);
+    ApiResponse getUserDetails(String userId);
 }

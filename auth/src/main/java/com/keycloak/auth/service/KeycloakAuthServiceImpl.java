@@ -162,20 +162,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             String fullName = jwt.getClaim("name");
             Object realmAccess = jwt.getClaim("realm_access");
 
-            List<String> rolesWithPrefix = new ArrayList<>();
-
-            if (realmAccess instanceof Map) {
-                Map<String, Object> realmAccessMap = (Map<String, Object>) realmAccess;
-
-                Object rolesObj = realmAccessMap.get("roles");
-                if (rolesObj instanceof List) {
-                    List<String> roles = (List<String>) rolesObj;
-
-                    rolesWithPrefix = roles.stream()
-                            .filter(role -> role.startsWith("ROLE_"))
-                            .collect(Collectors.toList());
-                }
-            }
+            List<String> rolesWithPrefix = getUserRoles(realmAccess);
 
             // Build response
             return new UserInfoResponse(userId, email, fullName, rolesWithPrefix);
@@ -185,41 +172,92 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private List<String> getUserRoles(Object rolesSource) {
+        List<String> rolesWithPrefix = new ArrayList<>();
+
+        if (rolesSource == null) {
+            return rolesWithPrefix;
+        }
+
+        // Case 1: roles from JWT realm_access claim (Map<String, Object>)
+        if (rolesSource instanceof Map) {
+            Map<String, Object> realmAccessMap = (Map<String, Object>) rolesSource;
+
+            Object rolesObj = realmAccessMap.get("roles");
+            if (rolesObj instanceof List) {
+                List<String> roles = (List<String>) rolesObj;
+
+                rolesWithPrefix = roles.stream()
+                        .filter(role -> role.startsWith("ROLE_"))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        // Case 2: roles directly as a List<String>
+        else if (rolesSource instanceof List) {
+            List<?> rawRoles = (List<?>) rolesSource;
+
+            rolesWithPrefix = rawRoles.stream()
+                    .filter(role -> role instanceof String)
+                    .map(role -> (String) role)
+                    .filter(role -> role.startsWith("ROLE_"))
+                    .collect(Collectors.toList());
+        }
+
+        return rolesWithPrefix;
+    }
+
+
     @Override
-    public UserInfoResponse getUserDetails(String userId) {
+    public ApiResponse getUserDetails(String userId) {
 
-        UserResource userResource = keycloak
-                .realm(keycloakProperties.getRealm())
-                .users()
-                .get(userId);
+        try {
 
-        UserRepresentation user = userResource.toRepresentation();
-        String email = user.getEmail();
-        String fullName = user.getFirstName() + " " + user.getLastName();
-        Boolean isVerified = user.isEmailVerified();
-        Boolean isEnabled = user.isEnabled();
-        List<String> roles = user.getRealmRoles();
+            UserResource userResource = keycloak
+                    .realm(keycloakProperties.getRealm())
+                    .users()
+                    .get(userId);
 
-        System.out.println("********");
-        System.out.println("email "+email);
-        System.out.println("fullName "+fullName);
-        System.out.println("isVerified "+isVerified);
-        System.out.println("isEnabled "+isEnabled);
-        System.out.println("roles "+roles);
-        System.out.println("********");
+            UserRepresentation user = userResource.toRepresentation();
+            String email = user.getEmail();
+            String fullName = user.getFirstName() + " " + user.getLastName();
+            Boolean isVerified = user.isEmailVerified();
+            Boolean isEnabled = user.isEnabled();
 
-        return new UserInfoResponse(userId, email, fullName, roles);
+            List<String> roles = new ArrayList<>();
+
+            // ✅ Realm-level roles
+            List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
+            for (RoleRepresentation role : realmRoles) {
+                roles.add(role.getName());
+            }
+
+            // ✅ Client-level roles (for your client)
+            String clientId = keycloak.realm(keycloakProperties.getRealm())
+                    .clients()
+                    .findByClientId(keycloakProperties.getClientId())
+                    .get(0)
+                    .getId();
+
+            List<RoleRepresentation> clientRoles = userResource.roles()
+                    .clientLevel(clientId)
+                    .listEffective();
+            for (RoleRepresentation role : clientRoles) {
+                roles.add(role.getName());
+            }
+
+            List<String> rolesWithPrefix = getUserRoles(roles);
+            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, rolesWithPrefix);
+            return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
+
+        }catch (Exception ex) {
+            log.error("❌ The user id could not be found [{}]: {}", userId, ex.getMessage(), ex);
+            return new ApiResponse(HttpStatus.NOT_FOUND.value(),
+                    "The user id could not be found.");
+        }
 
 
-//        Map<String, Object> userInfo = new HashMap<>();
-//        userInfo.put("id", user.getId());
-//        userInfo.put("username", user.getUsername());
-//        userInfo.put("email", user.getEmail());
-//        userInfo.put("firstName", user.getFirstName());
-//        userInfo.put("lastName", user.getLastName());
-//        userInfo.put("enabled", user.isEnabled());
-
-//        return null;
     }
 
 }
