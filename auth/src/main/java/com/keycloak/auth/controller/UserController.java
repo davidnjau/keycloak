@@ -1,6 +1,8 @@
 package com.keycloak.auth.controller;
 
 import com.keycloak.auth.ApiResponse;
+import com.keycloak.auth.LoginRequest;
+import com.keycloak.auth.RefreshTokenDtO;
 import com.keycloak.auth.UserInfoResponse;
 import com.keycloak.auth.service.KeycloakAuthService;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,15 +31,22 @@ public class UserController {
      * Get user info from current token
      */
     @GetMapping("/me")
-    public ResponseEntity<UserInfoResponse> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<ApiResponse> getCurrentUser(Authentication authentication) {
 
-        UserInfoResponse userInfoResponse = keycloakAuthService.getUserInfo(authentication); // Ensure user info is fetched
-        return ResponseEntity.ok(userInfoResponse);
+        ApiResponse apiResponse = keycloakAuthService.getUserInfo(authentication); // Ensure user info is fetched
+        return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse> getUserById(@PathVariable("userId") String userId) {
         ApiResponse apiResponse = keycloakAuthService.getUserDetails(userId); // Ensure user info is fetched
         return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
+    }
+
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse> refreshToken(@RequestBody RefreshTokenDtO refreshTokenDtO) {
+        ApiResponse dbDetails = keycloakAuthService.refreshToken(refreshTokenDtO);
+        return ResponseEntity.status(dbDetails.getStatusCode()).body(dbDetails);
     }
 }

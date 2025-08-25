@@ -16,6 +16,11 @@ data class LoginRequest(
 ){
     constructor() : this("", "")
 }
+data class RefreshTokenDtO(
+    val refreshToken: String,
+){
+    constructor() : this("")
+}
 
 data class TokenResponse(
     val accessToken: String,

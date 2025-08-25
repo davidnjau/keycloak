@@ -1,24 +1,31 @@
 package com.keycloak.auth.service;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.keycloak.auth.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.authorization.client.util.Http;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.core.Response;
@@ -119,7 +126,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
-    public LoginResponse login(LoginRequest request) {
+    public ApiResponse login(LoginRequest request) {
 
         try {
             // Build a Keycloak instance specifically for user login (password grant)
@@ -139,11 +146,13 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             // Request access token
             AccessTokenResponse tokenResponse = userKeycloak.tokenManager().getAccessToken();
 
-            return new LoginResponse(
+            LoginResponse loginResponse = new LoginResponse(
                     tokenResponse.getToken(),
                     tokenResponse.getRefreshToken(),
                     tokenResponse.getExpiresIn()
             );
+            return new ApiResponse(HttpStatus.OK.value(), loginResponse);
+
 
         } catch (Exception e) {
             throw new RuntimeException("Login failed: " + e.getMessage(), e);
@@ -151,7 +160,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
-    public UserInfoResponse getUserInfo(Authentication authentication) {
+    public ApiResponse getUserInfo(Authentication authentication) {
         try {
 
             JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
@@ -165,10 +174,13 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             List<String> rolesWithPrefix = getUserRoles(realmAccess);
 
             // Build response
-            return new UserInfoResponse(userId, email, fullName, rolesWithPrefix);
+            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, rolesWithPrefix);
+            return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
 
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid token", e);
+        } catch (Exception ex) {
+            log.error("❌ User information could not be found [{}]: {}", authentication, ex.getMessage(), ex);
+            return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
+                    "Unauthorized access.");
         }
     }
 
@@ -258,6 +270,84 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         }
 
 
+    }
+
+    @Override
+    public ApiResponse refreshToken(RefreshTokenDtO dto) {
+
+        String refreshToken = dto.getRefreshToken();
+        try {
+            if (refreshToken.isEmpty()) {
+                return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
+                        "Refresh token is required" );
+            }
+
+            // Prepare HTTP headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            // Prepare request body
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("grant_type", "refresh_token");
+            body.add("client_id", keycloakProperties.getClientId());
+            body.add("client_secret", keycloakProperties.getClientSecret());
+            body.add("refresh_token", refreshToken);
+
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+            // Make the request
+            RestTemplate restTemplate = new RestTemplate();
+
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    keycloakProperties.getTokenUrl(),
+                    HttpMethod.POST,
+                    request,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            Map<String, Object> tokenResponse = response.getBody();
+            if (tokenResponse == null || !tokenResponse.containsKey("access_token")) {
+                return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
+                        "Invalid or expired refresh token" );
+            }
+
+            String accessToken = (String) tokenResponse.get("access_token");
+            String newRefreshToken = (String) tokenResponse.get("refresh_token");
+            DecodedJWT decodedJWT = JWT.decode(accessToken);
+            LoginResponse loginResponse = getLoginResponse(decodedJWT, accessToken, newRefreshToken);
+            return new ApiResponse(HttpStatus.OK.value(), loginResponse);
+
+        } catch (Exception ex) {
+            // Log the exception
+            log.error("Failed to refresh token: {}", ex.getMessage(), ex);
+            return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
+                    "Failed to refresh token: " + ex.getMessage());
+        }
+
+
+    }
+
+    @NotNull
+    private static LoginResponse getLoginResponse(DecodedJWT decodedJWT, String accessToken, String newRefreshToken) {
+        Date expirationDate = decodedJWT.getExpiresAt();
+
+        // Current time
+        Date now = new Date();
+
+        // Calculate difference in milliseconds
+        long diffMillis = expirationDate.getTime() - now.getTime();
+
+        // Convert to seconds, minutes, hours if needed
+        long diffSeconds = diffMillis / 1000;
+        long diffMinutes = diffSeconds / 60;
+        long diffHours = diffMinutes / 60;
+
+        LoginResponse loginResponse = new LoginResponse(
+                accessToken,
+                newRefreshToken,
+                diffSeconds
+        );
+        return loginResponse;
     }
 
 }

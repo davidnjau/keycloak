@@ -21,8 +21,9 @@ public class AuthController {
     }
 
     @PostMapping("login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(keycloakService.login(request));
     }
+
 
 }
