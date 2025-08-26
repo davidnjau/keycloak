@@ -18,15 +18,16 @@ public class AuthController {
     private final KeycloakAuthServiceImpl keycloakService;
 
     @PostMapping("register")
-    public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest request) {
-        ApiResponse dbDetails = keycloakService.registerUser(request);
-        return ResponseEntity.status(dbDetails.getStatusCode()).body(dbDetails);
+    public ResponseEntity<ResponseWrapper<String>> register(@RequestBody RegisterRequest request) {
+        String registerUser = keycloakService.registerUser(request);
+        return ResponseEntity.ok(ResponseWrapper.success(registerUser));
 
     }
 
     @PostMapping("login")
-    public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.ok(keycloakService.login(request));
+    public ResponseEntity<ResponseWrapper<LoginResponse>> login(@RequestBody LoginRequest request) {
+        LoginResponse loginResponse = keycloakService.login(request);
+        return ResponseEntity.ok(ResponseWrapper.success(loginResponse));
     }
 
     @GetMapping("service-token")

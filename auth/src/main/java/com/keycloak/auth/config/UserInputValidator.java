@@ -3,6 +3,7 @@ package com.keycloak.auth.config;
 import com.keycloak.auth.LoginRequest;
 import com.keycloak.auth.RegisterRequest;
 import com.keycloak.auth.UpdateUserRequest;
+import com.keycloak.common.exception.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -52,7 +53,7 @@ public class UserInputValidator {
      * Validates user registration request
      *
      * @param request the registration request to validate
-     * @throws IllegalArgumentException if validation fails
+     * @throws BadRequestException if validation fails
      */
     public void validateRegistrationRequest(RegisterRequest request) {
         log.debug("Validating registration request for username: {}", request.getUsername());
@@ -74,30 +75,30 @@ public class UserInputValidator {
      * Validates user login request
      *
      * @param request the login request to validate
-     * @throws IllegalArgumentException if validation fails
+     * @throws BadRequestException if validation fails
      */
     public void validateLoginRequest(LoginRequest request) {
         log.debug("Validating login request");
 
         if (request == null) {
-            throw new IllegalArgumentException("Login request cannot be null");
+            throw new BadRequestException("Login request cannot be null");
         }
 
         if (!StringUtils.hasText(request.getUsername())) {
-            throw new IllegalArgumentException("Username is required");
+            throw new BadRequestException("Username is required");
         }
 
         if (!StringUtils.hasText(request.getPassword())) {
-            throw new IllegalArgumentException("Password is required");
+            throw new BadRequestException("Password is required");
         }
 
         // Basic length checks to prevent buffer overflow attempts
         if (request.getUsername().length() > MAX_USERNAME_LENGTH) {
-            throw new IllegalArgumentException("Username is too long");
+            throw new BadRequestException("Username is too long");
         }
 
         if (request.getPassword().length() > MAX_PASSWORD_LENGTH) {
-            throw new IllegalArgumentException("Password is too long");
+            throw new BadRequestException("Password is too long");
         }
 
         validateNoSqlInjection(request.getUsername());
@@ -109,13 +110,13 @@ public class UserInputValidator {
      * Validates user update request
      *
      * @param request the update request to validate
-     * @throws IllegalArgumentException if validation fails
+     * @throws BadRequestException if validation fails
      */
     public void validateUpdateRequest(UpdateUserRequest request) {
         log.debug("Validating update request");
 
         if (request == null) {
-            throw new IllegalArgumentException("Update request cannot be null");
+            throw new BadRequestException("Update request cannot be null");
         }
 
         // Validate only non-null fields
@@ -158,25 +159,25 @@ public class UserInputValidator {
      */
     private void validateUsername(String username) {
         if (!StringUtils.hasText(username)) {
-            throw new IllegalArgumentException("Username is required");
+            throw new BadRequestException("Username is required");
         }
 
         if (username.length() < MIN_USERNAME_LENGTH || username.length() > MAX_USERNAME_LENGTH) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     String.format("Username must be between %d and %d characters",
                             MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH)
             );
         }
 
         if (!USERNAME_PATTERN.matcher(username).matches()) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     "Username can only contain letters, numbers, dots, underscores, and hyphens"
             );
         }
 
         // Check for reserved usernames
         if (isReservedUsername(username)) {
-            throw new IllegalArgumentException("Username is reserved and cannot be used");
+            throw new BadRequestException("Username is reserved and cannot be used");
         }
     }
 
@@ -185,20 +186,20 @@ public class UserInputValidator {
      */
     private void validateEmail(String email) {
         if (!StringUtils.hasText(email)) {
-            throw new IllegalArgumentException("Email is required");
+            throw new BadRequestException("Email is required");
         }
 
         if (email.length() > MAX_EMAIL_LENGTH) {
-            throw new IllegalArgumentException("Email is too long");
+            throw new BadRequestException("Email is too long");
         }
 
         if (!EMAIL_PATTERN.matcher(email).matches()) {
-            throw new IllegalArgumentException("Invalid email format");
+            throw new BadRequestException("Invalid email format");
         }
 
         // Check for disposable email domains (optional)
         if (isDisposableEmail(email)) {
-            throw new IllegalArgumentException("Disposable email addresses are not allowed");
+            throw new BadRequestException("Disposable email addresses are not allowed");
         }
     }
 
@@ -207,21 +208,21 @@ public class UserInputValidator {
      */
     private void validatePassword(String password) {
         if (!StringUtils.hasText(password)) {
-            throw new IllegalArgumentException("Password is required");
+            throw new BadRequestException("Password is required");
         }
 
         if (password.length() < MIN_PASSWORD_LENGTH) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     String.format("Password must be at least %d characters long", MIN_PASSWORD_LENGTH)
             );
         }
 
         if (password.length() > MAX_PASSWORD_LENGTH) {
-            throw new IllegalArgumentException("Password is too long");
+            throw new BadRequestException("Password is too long");
         }
 
         if (!PASSWORD_PATTERN.matcher(password).matches()) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     "Password must contain at least one uppercase letter, one lowercase letter, " +
                             "one digit, and one special character (@$!%*?&)"
             );
@@ -229,7 +230,7 @@ public class UserInputValidator {
 
         // Check for common weak passwords
         if (isCommonPassword(password)) {
-            throw new IllegalArgumentException("Password is too common. Please choose a stronger password");
+            throw new BadRequestException("Password is too common. Please choose a stronger password");
         }
     }
 
@@ -238,15 +239,15 @@ public class UserInputValidator {
      */
     private void validateName(String name, String fieldName) {
         if (!StringUtils.hasText(name)) {
-            throw new IllegalArgumentException(fieldName + " is required");
+            throw new BadRequestException(fieldName + " is required");
         }
 
         if (name.length() > MAX_NAME_LENGTH) {
-            throw new IllegalArgumentException(fieldName + " is too long");
+            throw new BadRequestException(fieldName + " is too long");
         }
 
         if (!NAME_PATTERN.matcher(name).matches()) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     fieldName + " can only contain letters, spaces, apostrophes, and hyphens"
             );
         }
@@ -257,7 +258,7 @@ public class UserInputValidator {
      */
     private void validatePhoneNumber(String phoneNumber) {
         if (!PHONE_PATTERN.matcher(phoneNumber).matches()) {
-            throw new IllegalArgumentException("Invalid phone number format");
+            throw new BadRequestException("Invalid phone number format");
         }
     }
 
@@ -267,16 +268,16 @@ public class UserInputValidator {
     private void validateRoles(java.util.List<String> roles) {
         for (String role : roles) {
             if (!StringUtils.hasText(role)) {
-                throw new IllegalArgumentException("Role name cannot be empty");
+                throw new BadRequestException("Role name cannot be empty");
             }
 
             if (role.length() > 50) {
-                throw new IllegalArgumentException("Role name is too long: " + role);
+                throw new BadRequestException("Role name is too long: " + role);
             }
 
             // Role names should follow a specific pattern
             if (!role.matches("^ROLE_[A-Z_]+$")) {
-                throw new IllegalArgumentException("Invalid role format: " + role);
+                throw new BadRequestException("Invalid role format: " + role);
             }
         }
     }
@@ -296,7 +297,7 @@ public class UserInputValidator {
         for (String keyword : sqlKeywords) {
             if (lowerInput.contains(keyword)) {
                 log.warn("Potential SQL injection attempt detected: {}", input);
-                throw new IllegalArgumentException("Invalid characters detected in input");
+                throw new BadRequestException("Invalid characters detected in input");
             }
         }
     }
@@ -317,7 +318,7 @@ public class UserInputValidator {
             for (String pattern : xssPatterns) {
                 if (lowerInput.contains(pattern)) {
                     log.warn("Potential XSS attempt detected: {}", input);
-                    throw new IllegalArgumentException("Invalid characters detected in input");
+                    throw new BadRequestException("Invalid characters detected in input");
                 }
             }
         }
@@ -408,7 +409,7 @@ public class UserInputValidator {
      */
     public void validateMaxLength(String input, int maxLength, String fieldName) {
         if (input != null && input.length() > maxLength) {
-            throw new IllegalArgumentException(
+            throw new BadRequestException(
                     String.format("%s cannot exceed %d characters", fieldName, maxLength)
             );
         }
@@ -422,7 +423,7 @@ public class UserInputValidator {
      */
     public void validateRequired(String input, String fieldName) {
         if (!StringUtils.hasText(input)) {
-            throw new IllegalArgumentException(fieldName + " is required");
+            throw new BadRequestException(fieldName + " is required");
         }
     }
 }

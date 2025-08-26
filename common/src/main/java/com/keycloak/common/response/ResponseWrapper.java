@@ -42,7 +42,7 @@ public class ResponseWrapper<T> implements Serializable {
     }
 
     public static <T> ResponseWrapper<T> success(T data) {
-        return success(data, "Operation successful", 200);
+        return success(data, "The operation was successful", 200);
     }
 
     // ✅ Error factory methods

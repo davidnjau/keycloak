@@ -8,6 +8,8 @@ import com.keycloak.auth.config.KeycloakProperties;
 import com.keycloak.auth.config.UserInputValidator;
 import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.exception.ConflictException;
+import com.keycloak.common.exception.InternalServerException;
+import com.keycloak.common.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -73,77 +75,97 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     @Override
     @Transactional
-    public ApiResponse registerUser(RegisterRequest request) {
+    public String registerUser(RegisterRequest request) throws BadRequestException{
         log.info("Starting user registration for username: {}", request.getUsername());
 
-        try {
+        // Validate input
+        userInputValidator.validateRegistrationRequest(request);
 
-            // Validate input
-            userInputValidator.validateRegistrationRequest(request);
-
-            // Check if user already exists
-            if (userExists(request.getUsername(), request.getEmail())) {
-                log.warn("Registration failed - user already exists: {}", request.getUsername());
-                throw new ConflictException("User already exists");
-            }
-
-            UserRepresentation user = buildUserRepresentation(request);
-
-
-
-
-            RealmResource realmResource = keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm());
-            UsersResource usersResource = realmResource.users();
-
-            Response response = usersResource.create(user);
-            int statusCode = response.getStatus();
-
-            try (response) {
-                if (statusCode == Response.Status.CREATED.getStatusCode()) {
-                    String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
-                    log.info("✅ User [{}] created successfully with ID [{}]", request.getUsername(), userId);
-
-                    // 🔑 Set password
-                    CredentialRepresentation passwordCred = new CredentialRepresentation();
-                    passwordCred.setTemporary(false); // false = permanent password
-                    passwordCred.setType(CredentialRepresentation.PASSWORD);
-                    passwordCred.setValue(request.getPassword()); // assume your request DTO carries password
-
-                    usersResource.get(userId).resetPassword(passwordCred);
-
-                    // 🔑 Assign default realm role (ROLE_USER)
-                    RoleRepresentation roleUser = realmResource.roles()
-                            .get("ROLE_USER") // make sure ROLE_USER exists in realm
-                            .toRepresentation();
-
-                    usersResource.get(userId).roles()
-                            .realmLevel()
-                            .add(Collections.singletonList(roleUser));
-
-                    return new ApiResponse(HttpStatus.CREATED.value(), "User has been created successfully");
-                } else if (statusCode == Response.Status.CONFLICT.getStatusCode()) {
-                    log.warn("⚠️ User [{}] already exists", request.getUsername());
-                    return new ApiResponse(HttpStatus.CONFLICT.value(), "User already exists");
-                } else if (statusCode == Response.Status.UNAUTHORIZED.getStatusCode()) {
-                    log.error("❌ Unauthorized when creating user [{}]. Check client roles & token.", request.getUsername());
-                    return new ApiResponse(HttpStatus.UNAUTHORIZED.value(), "Unauthorized: check service account permissions");
-                } else {
-                    log.error("❌ Failed to create user [{}]. Status: {}", request.getUsername(), statusCode);
-                    return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            "Failed to create user: " + statusCode);
-                }
-            }
-        } catch (IllegalArgumentException ex){
-            log.error("User registration failed: {}", request.getUsername());
-            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
-
-        } catch (Exception ex) {
-            log.error("❌ Exception while creating user [{}]: {}", request.getUsername(), ex.getMessage(), ex);
-            return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "The server could not process the data at this time.");
+        // Check if user already exists
+        if (userExists(request.getUsername(), request.getEmail())) {
+            log.warn("Registration failed - user already exists: {}", request.getUsername());
+            throw new ConflictException("User already exists");
         }
 
+        UserRepresentation user = buildUserRepresentation(request);
 
+        RealmResource realmResource = keycloak
+                .serviceAccountKeycloakClient()
+                .realm(keycloakProperties.getRealm());
+        UsersResource usersResource = realmResource.users();
+
+        Response response = usersResource.create(user);
+        int statusCode = response.getStatus();
+
+        if (statusCode != Response.Status.CREATED.getStatusCode()) {
+            log.error("Failed to create user: {}", response.readEntity(String.class));
+            throw new BadRequestException("Failed to create user, try again later.");
+        }
+
+        log.info("✅ User [{}] created successfully", request.getUsername());
+        handleUserCreationResponse(response, request, usersResource, realmResource);
+
+        return request.getUsername() + " has been registered successfully.";
+
+
+    }
+
+    private ApiResponse handleUserCreationResponse(Response response,
+                                                   RegisterRequest request,
+                                                   UsersResource usersResource,
+                                                   RealmResource realmResource) {
+        int statusCode = response.getStatus();
+
+        try (response) {
+            if (statusCode == Response.Status.CREATED.getStatusCode()) {
+                String userId = extractUserIdFromResponse(response);
+
+                // Set password
+                setUserPassword(usersResource.get(userId), request.getPassword());
+
+                // Assign default role
+                assignDefaultRole(usersResource.get(userId), realmResource);
+
+                log.info("User created successfully: {} with ID: {}", request.getUsername(), userId);
+                return new ApiResponse(HttpStatus.CREATED.value(), "User created successfully");
+
+            } else if (statusCode == Response.Status.CONFLICT.getStatusCode()) {
+                throw new ConflictException("User already exists");
+            } else {
+                log.error("Failed to create user. Status: {}", statusCode);
+                throw new BadRequestException("Failed to create user: " + statusCode);
+            }
+        }
+    }
+
+    private String extractUserIdFromResponse(Response response) {
+        return response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
+    }
+
+    private void assignDefaultRole(UserResource userResource, RealmResource realmResource) {
+        try {
+
+            RoleRepresentation roleUser = realmResource
+                    .roles()
+                    .get("ROLE_USER")// make sure ROLE_USER exists in realm
+                    .toRepresentation();
+            userResource
+                    .roles()
+                    .realmLevel()
+                    .add(Collections.singletonList(roleUser));
+
+        } catch (Exception e) {
+            log.warn("Failed to assign default role", e);
+            throw new BadRequestException("Failed to assign default role. ");
+        }
+    }
+
+    private void setUserPassword(UserResource userResource, String password) {
+        CredentialRepresentation passwordCred = new CredentialRepresentation();
+        passwordCred.setTemporary(false);
+        passwordCred.setType(CredentialRepresentation.PASSWORD);
+        passwordCred.setValue(password);
+        userResource.resetPassword(passwordCred);
     }
 
     private UserRepresentation buildUserRepresentation(RegisterRequest request) {
@@ -162,25 +184,34 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         try {
             RealmResource realm = keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm());
 
+            // Check email
+            List<UserRepresentation> usersByEmail = realm.users().search(email, 0, 1);
+
             // Check username
             List<UserRepresentation> usersByUsername = realm.users().search(username, true);
             if (!usersByUsername.isEmpty()) {
                 return true;
             }
 
-            // Check email
-            List<UserRepresentation> usersByEmail = realm.users().search(email, 0, 1);
+            System.out.println("**********");
+            System.out.println("realm "+realm);
+            System.out.println("username "+username);
+            System.out.println("email "+email);
+            System.out.println("usersByUsername "+usersByUsername);
+            System.out.println("usersByEmail "+usersByEmail);
+            System.out.println("**********");
+
             return !usersByEmail.isEmpty();
 
         } catch (Exception e) {
-            log.error("Error checking user existence", e);
-            return false;
+            log.error("Failed to check user existence", e);
+            throw new BadRequestException("User existence check failed");
         }
     }
 
 
     @Override
-    public ApiResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
 
         try {
             // Request access token
@@ -188,18 +219,24 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
                     .userKeycloakClient(
                             request.getUsername(),
                             request.getPassword())
-                    .tokenManager().getAccessToken();
+                    .tokenManager()
+                    .getAccessToken();
 
-            LoginResponse loginResponse = new LoginResponse(
+            return new LoginResponse(
                     tokenResponse.getToken(),
                     tokenResponse.getRefreshToken(),
                     tokenResponse.getExpiresIn()
             );
-            return new ApiResponse(HttpStatus.OK.value(), loginResponse);
 
-
-        } catch (Exception e) {
-            throw new RuntimeException("Login failed: " + e.getMessage(), e);
+        } catch (javax.ws.rs.NotAuthorizedException ex) {
+            // Keycloak returned 401 → map to UnauthorizedException
+            log.error("Unauthorized when trying to authenticate user: {}", request.getUsername());
+            throw new BadRequestException("Invalid username or password", ex);
+        } catch (Exception ex) {
+            // All other unexpected errors → map to InternalServerErrorException
+            log.error("Failed to authenticate user: {}", ex.getMessage(), ex);
+            throw new InternalServerException(
+                    "Failed to authenticate user ");
         }
 
     }
