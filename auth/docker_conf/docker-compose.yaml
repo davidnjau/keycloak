@@ -2,39 +2,96 @@ version: '3.8'
 
 volumes:
   keycloak-postgres:
+  redis_data:
+  spring-postgres:
 
 networks:
-  cloudbuild:
+  app_network:
     driver: bridge
 
 services:
   keycloak-postgres:
-    image: postgres:14-alpine
+    image: ${POSTGRES_IMAGE}
+    container_name: ${KEYCLOAK_POSTGRES_CONTAINER_NAME}
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
     networks:
-      - cloudbuild
+      - app_network
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_DB: keycloak
-      POSTGRES_PASSWORD: keycloak_not_123
+      POSTGRES_USER: ${KEYCLOAK_DB_USER}
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
     volumes:
-      - 'keycloak-postgres:/var/lib/postgresql/data'
+      - keycloak-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER} -d ${KEYCLOAK_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   keycloak:
-    image: quay.io/keycloak/keycloak:23.0.7
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    networks:
-      - cloudbuild
+    image: ${KC_IMAGE}
+    container_name: ${KC_CONTAINER_NAME}
+    command: start-dev --import-realm
+    environment:
+      KC_DB: ${KC_DB}
+      KC_DB_URL: ${KC_DB_URL}
+      KC_DB_USERNAME: ${KC_DB_USERNAME}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KC_HOSTNAME: ${KC_HOSTNAME}
+      KEYCLOAK_ADMIN: ${KC_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
     ports:
-      - "8999:8080"
-    env_file:
-      - .env
+      - "${KC_PORT}:8080"
     depends_on:
-      - keycloak-postgres
-    command: start-dev
+      keycloak-postgres:
+        condition: service_healthy
+    networks:
+      - app_network
+    volumes:
+      - ./keycloak_realm.json:/opt/keycloak/data/import/keycloak_realm.json
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8999/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis-vector:
+    image: ${REDIS_IMAGE}
+    container_name: ${REDIS_CONTAINER_NAME}
+    ports:
+      - "${REDIS_PORT}:6379"      # Redis
+      - "${REDIS_WEB_PORT}:8001" # RedisInsight UI
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_ARGS=--save 900 1
+    networks:
+      - app_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  spring-postgres:
+    image: ${POSTGRES_IMAGE}
+    container_name: ${SPRING_POSTGRES_CONTAINER_NAME}
+    environment:
+      POSTGRES_DB: ${SPRING_DB_NAME}
+      POSTGRES_USER: ${SPRING_DB_USER}
+      POSTGRES_PASSWORD: ${SPRING_DB_PASSWORD}
+    volumes:
+      - spring-postgres:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:5432"   # exposed for local dev
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SPRING_DB_USER} -d ${SPRING_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
