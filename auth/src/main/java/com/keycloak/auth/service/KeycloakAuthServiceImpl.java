@@ -6,6 +6,7 @@ import com.keycloak.auth.*;
 import com.keycloak.auth.config.KeycloakConfig;
 import com.keycloak.auth.config.KeycloakProperties;
 import com.keycloak.common.*;
+import com.keycloak.common.exception.InternalServerException;
 import com.keycloak.common.validation.UserInputValidator;
 import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.exception.ConflictException;
@@ -239,57 +240,50 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     }
 
     @Override
-    public ApiResponse refreshToken(RefreshTokenDtO dto) {
+    public LoginResponse refreshToken(RefreshTokenDtO dto) {
 
         String refreshToken = dto.getRefreshToken();
-        try {
-            if (refreshToken.isEmpty()) {
-                return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
-                        "Refresh token is required" );
-            }
-
-            // Prepare HTTP headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-            // Prepare request body
-            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-            body.add("grant_type", "refresh_token");
-            body.add("client_id", keycloakProperties.getClientId());
-            body.add("client_secret", keycloakProperties.getClientSecret());
-            body.add("refresh_token", refreshToken);
-
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-
-            // Make the request
-            RestTemplate restTemplate = new RestTemplate();
-
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    keycloakProperties.getTokenUrl(),
-                    HttpMethod.POST,
-                    request,
-                    new ParameterizedTypeReference<>() {}
-            );
-
-            Map<String, Object> tokenResponse = response.getBody();
-            if (tokenResponse == null || !tokenResponse.containsKey("access_token")) {
-                return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
-                        "Invalid or expired refresh token" );
-            }
-
-            String accessToken = (String) tokenResponse.get("access_token");
-            String newRefreshToken = (String) tokenResponse.get("refresh_token");
-            DecodedJWT decodedJWT = JWT.decode(accessToken);
-            LoginResponse loginResponse = getLoginResponse(decodedJWT, accessToken, newRefreshToken);
-            return new ApiResponse(HttpStatus.OK.value(), loginResponse);
-
-        } catch (Exception ex) {
-            // Log the exception
-            log.error("Failed to refresh token: {}", ex.getMessage(), ex);
-            return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
-                    "Failed to refresh token: " + ex.getMessage());
+        if (refreshToken.isEmpty()) {
+            throw new BadRequestException("Refresh token is required");
         }
 
+        // Prepare HTTP headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // Prepare request body
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "refresh_token");
+        body.add("client_id", keycloakProperties.getClientId());
+        body.add("client_secret", keycloakProperties.getClientSecret());
+        body.add("refresh_token", refreshToken);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        // Make the request
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                keycloakProperties.getTokenUrl(),
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<>() {}
+        );
+        Map<String, Object> tokenResponse = response.getBody();
+
+        if (tokenResponse == null ||!tokenResponse.containsKey("access_token")) {
+            throw new InternalServerException("Failed to refresh token");
+        }
+
+        String accessToken = (String) tokenResponse.get("access_token");
+        String newRefreshToken = (String) tokenResponse.get("refresh_token");
+
+        if (accessToken == null || newRefreshToken == null) {
+            throw new InternalServerException("Failed to refresh token");
+        }
+
+        DecodedJWT decodedJWT = JWT.decode(accessToken);
+        return getLoginResponse(decodedJWT, accessToken, newRefreshToken);
 
     }
 
@@ -315,7 +309,11 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
 
     @NotNull
-    private static LoginResponse getLoginResponse(DecodedJWT decodedJWT, String accessToken, String newRefreshToken) {
+    private static LoginResponse getLoginResponse(
+            DecodedJWT decodedJWT,
+            String accessToken,
+            String newRefreshToken) {
+
         Date expirationDate = decodedJWT.getExpiresAt();
 
         // Current time

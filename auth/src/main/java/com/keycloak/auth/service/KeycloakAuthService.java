@@ -11,7 +11,7 @@ public interface KeycloakAuthService {
     UserInfoResponse getUserInfo(Authentication authentication);
     UserInfoResponse getUserDetails(String userId);
 
-    ApiResponse refreshToken(RefreshTokenDtO refreshTokenDtO);
+    LoginResponse refreshToken(RefreshTokenDtO refreshTokenDtO);
     ApiResponse logout(Authentication authentication);
     ApiResponse updateUser(String userId, UpdateUserRequest request);
 }
