@@ -37,9 +37,9 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse> getUserById(@PathVariable("userId") String userId) {
-        ApiResponse apiResponse = keycloakAuthService.getUserDetails(userId); // Ensure user info is fetched
-        return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
+    public ResponseEntity<ResponseWrapper<UserInfoResponse>> getUserById(@PathVariable("userId") String userId) {
+        UserInfoResponse response = keycloakAuthService.getUserDetails(userId); // Ensure user info is fetched
+        return ResponseEntity.ok(ResponseWrapper.success(response));
     }
     @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponse> refreshToken(@RequestBody RefreshTokenDtO refreshTokenDtO) {

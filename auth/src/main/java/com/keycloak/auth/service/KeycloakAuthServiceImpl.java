@@ -58,7 +58,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     private static final long CACHE_TTL = 10; // minutes
     private final UserInputValidator userInputValidator;
 
-
     @Override
     @Transactional(rollbackFor = BadRequestException.class)
     public String registerUser(RegisterRequest request) throws BadRequestException{
@@ -337,7 +336,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         );
     }
 
-    private List<String> extractUserRoles(UserResource userResource, String clientIdd) {
+    private List<String> extractUserRoles(UserResource userResource) {
 
         List<String> roles = new ArrayList<>();
 
@@ -356,11 +355,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
                 .get(0)
                 .getId();
 
-        System.out.println("*********");
-        System.out.println("clientId "+clientId);
-        System.out.println("clientIdd "+clientIdd);
-        System.out.println("*********");
-
         List<RoleRepresentation> clientRoles = userResource.roles()
                 .clientLevel(clientId)
                 .listEffective();
@@ -372,11 +366,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
-    /**
-     * Cache The following method to avoid unnecessary database calls
-     * @param authentication
-     * @return
-     */
     @Override
     public UserInfoResponse getUserInfo(Authentication authentication) {
 
@@ -384,28 +373,21 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         Jwt jwt = jwtAuth.getToken();
 
         String userId = jwt.getSubject();
-
-        //For redis
-        String cacheKey = "user:" + userId;
-
-        //Check redis cache first
-        UserInfoResponse cacheUserInfoResponse = (UserInfoResponse) redisTemplate.opsForValue().get(cacheKey);
-        if (cacheUserInfoResponse!= null) {
-            log.info("Retrieved user info from Redis cache: {}", cacheKey);
-            return cacheUserInfoResponse;
-        }
-
-        UserInfoResponse userInfoResponse = fetchUserInfoFromKeycloak(userId);
-
-        log.info("Saved user info to Redis cache: {} and retrieve data from keycloak", cacheKey);
-
-        // Store in cache (saves full ApiResponse object containing User)
-        redisTemplate.opsForValue().set(cacheKey, userInfoResponse, CACHE_TTL, TimeUnit.MINUTES);
-        return userInfoResponse;
+        return fetchUserInfoFromKeycloak(userId);
 
     }
 
-    private UserInfoResponse fetchUserInfoFromKeycloak(String userId) {
+    protected UserInfoResponse fetchUserInfoFromKeycloak(String userId) {
+        String cacheKey = "user:" + userId;
+
+        // 1. Check Redis cache
+        UserInfoResponse cachedUser = (UserInfoResponse) redisTemplate.opsForValue().get(cacheKey);
+        if (cachedUser != null) {
+            log.info("User info fetched from Redis cache: {}", userId);
+            return cachedUser;
+        }
+
+        // 2. Fetch from Keycloak if not cached
         UserResource userResource = keycloak.serviceAccountKeycloakClient()
                 .realm(keycloakProperties.getRealm())
                 .users()
@@ -413,18 +395,25 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
         UserRepresentation user = userResource.toRepresentation();
         if (user == null) {
+            log.error("User not found: {}", userId);
             throw new BadRequestException("User not found: " + userId);
         }
 
-        List<String> roles = extractUserRoles(userResource, keycloakProperties.getClientId());
+        List<String> roles = extractUserRoles(userResource);
 
-        return new UserInfoResponse(
+        UserInfoResponse userInfo = new UserInfoResponse(
                 userId,
                 user.getEmail(),
                 user.getFirstName() + " " + user.getLastName(),
                 user.getUsername(),
                 roles
         );
+
+        // 3. Save in Redis with TTL (optional: 1 hour here)
+        log.info("User info saved in Redis cache: {}", userId);
+        redisTemplate.opsForValue().set(cacheKey, userInfo, 1, TimeUnit.HOURS);
+
+        return userInfo;
     }
 
 
@@ -631,60 +620,8 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     }
 
     @Override
-    @Cacheable(value = "users", key = "#userId")
-    public ApiResponse getUserDetails(String userId) {
-
-        try {
-
-            UserResource userResource = keycloak
-                    .serviceAccountKeycloakClient()
-                    .realm(keycloakProperties.getRealm())
-                    .users()
-                    .get(userId);
-
-            UserRepresentation user = userResource.toRepresentation();
-            String email = user.getEmail();
-            String fullName = user.getFirstName() + " " + user.getLastName();
-            String username = user.getUsername();
-
-            Boolean isVerified = user.isEmailVerified();
-            Boolean isEnabled = user.isEnabled();
-
-            List<String> roles = new ArrayList<>();
-
-            // ✅ Realm-level roles
-            List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
-            for (RoleRepresentation role : realmRoles) {
-                roles.add(role.getName());
-            }
-
-            // ✅ Client-level roles (for your client)
-            String clientId = keycloak
-                    .serviceAccountKeycloakClient()
-                    .realm(keycloakProperties.getRealm())
-                    .clients()
-                    .findByClientId(keycloakProperties.getClientId())
-                    .get(0)
-                    .getId();
-
-            List<RoleRepresentation> clientRoles = userResource.roles()
-                    .clientLevel(clientId)
-                    .listEffective();
-            for (RoleRepresentation role : clientRoles) {
-                roles.add(role.getName());
-            }
-
-            List<String> rolesWithPrefix = getUserRoles(roles);
-            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, username, rolesWithPrefix);
-            return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
-
-        }catch (Exception ex) {
-            log.error("❌ The user id could not be found [{}]: {}", userId, ex.getMessage(), ex);
-            return new ApiResponse(HttpStatus.NOT_FOUND.value(),
-                    "The user id could not be found.");
-        }
-
-
+    public UserInfoResponse getUserDetails(String userId) {
+        return fetchUserInfoFromKeycloak(userId);
     }
 
 }

@@ -12,6 +12,8 @@ keycloak:
   default-role: ROLE_USER
 
 spring:
+  cache:
+    type: redis
   data:
     redis:
       host: localhost

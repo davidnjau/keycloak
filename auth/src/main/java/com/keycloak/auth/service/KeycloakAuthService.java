@@ -9,7 +9,8 @@ public interface KeycloakAuthService {
     LoginResponse login(LoginRequest request);
 
     UserInfoResponse getUserInfo(Authentication authentication);
-    ApiResponse getUserDetails(String userId);
+    UserInfoResponse getUserDetails(String userId);
+
     ApiResponse refreshToken(RefreshTokenDtO refreshTokenDtO);
     ApiResponse logout(Authentication authentication);
     ApiResponse updateUser(String userId, UpdateUserRequest request);
