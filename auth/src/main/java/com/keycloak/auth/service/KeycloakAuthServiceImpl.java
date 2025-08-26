@@ -134,7 +134,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
                 .findFirst();
 
         if (!roleOpt.isPresent()){
-            //Remove the created user as @Transactional annotation will not cause a rollback for Keycloak.
+            //Remove the created user as @Transactional annotation will not cause a rollback for Keycloak. (Saga pattern)
             realmResource.users().get(userResource.toRepresentation().getId()).remove();
             log.info("User removed successfully");
 
@@ -164,7 +164,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
-        user.setEmailVerified(false); // Require email verification
+        user.setEmailVerified(true); // Require email verification
 
         return user;
     }
@@ -195,31 +195,19 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     @Override
     public LoginResponse login(LoginRequest request) {
 
-        try {
-            // Request access token
-            AccessTokenResponse tokenResponse = keycloak
-                    .userKeycloakClient(
-                            request.getUsername(),
-                            request.getPassword())
-                    .tokenManager()
-                    .getAccessToken();
+        // Request access token
+        AccessTokenResponse tokenResponse = keycloak
+                .userKeycloakClient(
+                        request.getUsername(),
+                        request.getPassword())
+                .tokenManager()
+                .getAccessToken();
 
-            return new LoginResponse(
-                    tokenResponse.getToken(),
-                    tokenResponse.getRefreshToken(),
-                    tokenResponse.getExpiresIn()
-            );
-
-        } catch (javax.ws.rs.NotAuthorizedException ex) {
-            // Keycloak returned 401 → map to UnauthorizedException
-            log.error("Unauthorized when trying to authenticate user: {}", request.getUsername());
-            throw new BadRequestException("Invalid username or password", ex);
-        } catch (Exception ex) {
-            // All other unexpected errors → map to InternalServerErrorException
-            log.error("Failed to authenticate user: {}", ex.getMessage(), ex);
-            throw new InternalServerException(
-                    "Failed to authenticate user ");
-        }
+        return new LoginResponse(
+                tokenResponse.getToken(),
+                tokenResponse.getRefreshToken(),
+                tokenResponse.getExpiresIn()
+        );
 
     }
 
