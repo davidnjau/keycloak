@@ -47,9 +47,9 @@ public class UserController {
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
     @GetMapping("/logout")
-    public ResponseEntity<ApiResponse> logout(Authentication authentication) {
-        ApiResponse apiResponse = keycloakAuthService.logout(authentication); // Ensure user info is fetched
-        return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
+    public ResponseEntity<ResponseWrapper<String>> logout(Authentication authentication) {
+        String response = keycloakAuthService.logout(authentication); // Ensure user info is fetched
+        return ResponseEntity.ok(ResponseWrapper.success(response));
     }
     @PutMapping("/update-user/{userId}")
     public ResponseEntity<ApiResponse> updateUser(@PathVariable("userId") String userId, @RequestBody UpdateUserRequest request) {

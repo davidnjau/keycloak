@@ -288,23 +288,18 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     }
 
     @Override
-    public ApiResponse logout(Authentication authentication) {
+    public String logout(Authentication authentication) {
 
-        try{
-            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
-            Jwt jwt = jwtAuth.getToken();
-            String userId = jwt.getSubject();
-            keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm()).users().get(userId).logout();
-            return new ApiResponse(HttpStatus.OK.value(),
-                    "User logged out successfully");
+        JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+        Jwt jwt = jwtAuth.getToken();
+        String userId = jwt.getSubject();
+        keycloak.serviceAccountKeycloakClient()
+                .realm(keycloakProperties.getRealm())
+                .users()
+                .get(userId)
+                .logout();
 
-        }catch (Exception ex){
-            log.error("Failed to logout user: {}", ex.getMessage(), ex);
-            return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Failed to logout user: " + ex.getMessage());
-        }
-
-
+        return "You have been logged out successfully";
     }
 
 
