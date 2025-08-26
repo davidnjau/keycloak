@@ -3,9 +3,11 @@ package com.keycloak.auth.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.keycloak.auth.*;
+import com.keycloak.auth.config.KeycloakConfig;
 import com.keycloak.auth.config.KeycloakProperties;
 import com.keycloak.auth.config.UserInputValidator;
 import com.keycloak.common.exception.BadRequestException;
+import com.keycloak.common.exception.ConflictException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -55,7 +57,8 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
      */
 
     private final KeycloakProperties keycloakProperties;
-    private final Keycloak keycloak; // Injected as a @Bean
+//    private final Keycloak keycloak; // Injected as a @Bean
+    private final KeycloakConfig keycloak; // Injected as a @Bean
     private final RedisTemplate<String, Object> redisTemplate;
     private static final long CACHE_TTL = 10; // minutes
     private final UserInputValidator userInputValidator;
@@ -81,7 +84,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             // Check if user already exists
             if (userExists(request.getUsername(), request.getEmail())) {
                 log.warn("Registration failed - user already exists: {}", request.getUsername());
-                return new ApiResponse(HttpStatus.CONFLICT.value(), "User already exists");
+                throw new ConflictException("User already exists");
             }
 
             UserRepresentation user = buildUserRepresentation(request);
@@ -89,7 +92,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
 
 
-            RealmResource realmResource = keycloak.realm(keycloakProperties.getRealm());
+            RealmResource realmResource = keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm());
             UsersResource usersResource = realmResource.users();
 
             Response response = usersResource.create(user);
@@ -157,7 +160,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     private boolean userExists(String username, String email) {
         try {
-            RealmResource realm = keycloak.realm(keycloakProperties.getRealm());
+            RealmResource realm = keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm());
 
             // Check username
             List<UserRepresentation> usersByUsername = realm.users().search(username, true);
@@ -180,22 +183,12 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     public ApiResponse login(LoginRequest request) {
 
         try {
-            // Build a Keycloak instance specifically for user login (password grant)
-            Keycloak userKeycloak = KeycloakBuilder.builder()
-                    .serverUrl(keycloakProperties.getServerUrl())
-                    .realm(keycloakProperties.getRealm())
-                    .clientId(keycloakProperties.getClientId())
-                    .clientSecret(keycloakProperties.getClientSecret()) // confidential client
-                    .username(request.getUsername())
-                    .password(request.getPassword())
-                    .grantType(OAuth2Constants.PASSWORD)
-                    .resteasyClient(new ResteasyClientBuilder()
-                            .connectionPoolSize(10)
-                            .build())
-                    .build();
-
             // Request access token
-            AccessTokenResponse tokenResponse = userKeycloak.tokenManager().getAccessToken();
+            AccessTokenResponse tokenResponse = keycloak
+                    .userKeycloakClient(
+                            request.getUsername(),
+                            request.getPassword())
+                    .tokenManager().getAccessToken();
 
             LoginResponse loginResponse = new LoginResponse(
                     tokenResponse.getToken(),
@@ -310,7 +303,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
             Jwt jwt = jwtAuth.getToken();
             String userId = jwt.getSubject();
-            keycloak.realm(keycloakProperties.getRealm()).users().get(userId).logout();
+            keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm()).users().get(userId).logout();
             return new ApiResponse(HttpStatus.OK.value(),
                     "User logged out successfully");
 
@@ -369,6 +362,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
             //Get Data from Keycloak
             UserResource userResource = keycloak
+                    .serviceAccountKeycloakClient()
                     .realm(keycloakProperties.getRealm())
                     .users()
                     .get(userId);
@@ -389,7 +383,9 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             }
 
             // ✅ Client-level roles (for your client)
-            String clientId = keycloak.realm(keycloakProperties.getRealm())
+            String clientId = keycloak
+                    .serviceAccountKeycloakClient()
+                    .realm(keycloakProperties.getRealm())
                     .clients()
                     .findByClientId(keycloakProperties.getClientId())
                     .get(0)
@@ -425,7 +421,9 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
         try{
 
-            UserResource userResource = keycloak.realm(keycloakProperties.getRealm()).users().get(userId);
+            UserResource userResource = keycloak
+                    .serviceAccountKeycloakClient()
+                    .realm(keycloakProperties.getRealm()).users().get(userId);
             if (userResource == null) {
                 return new ApiResponse(HttpStatus.NOT_FOUND.value(),
                         "User not found");
@@ -445,7 +443,9 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             // Ensure username is unique
             if (request.getUsername() != null) {
                 // Check if username already exists in the realm (case-insensitive)
-                List<UserRepresentation> existingUsers = keycloak.realm(keycloakProperties.getRealm())
+                List<UserRepresentation> existingUsers = keycloak
+                        .serviceAccountKeycloakClient()
+                        .realm(keycloakProperties.getRealm())
                         .users().search(request.getUsername(), true);
                 if (!existingUsers.isEmpty()){
                     //List is not empty, so user exists
@@ -456,7 +456,9 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
             // Ensure email is unique
             if (request.getEmail() != null) {
-                List<UserRepresentation> existingUsers = keycloak.realm(keycloakProperties.getRealm())
+                List<UserRepresentation> existingUsers = keycloak
+                        .serviceAccountKeycloakClient()
+                        .realm(keycloakProperties.getRealm())
                         .users().search(request.getEmail(), 0, 1);
                 if (!existingUsers.isEmpty()){
                     //List is not empty, so user exists
@@ -483,7 +485,9 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             }
 
             if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-                RealmResource realmResource = keycloak.realm(keycloakProperties.getRealm());
+                RealmResource realmResource = keycloak
+                        .serviceAccountKeycloakClient()
+                        .realm(keycloakProperties.getRealm());
 
                 // Fetch all available roles in the realm
                 List<RoleRepresentation> availableRoles = realmResource.roles().list();
@@ -547,6 +551,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
                     // Get the updated user details
                     UserResource updateUserResource = keycloak
+                            .serviceAccountKeycloakClient()
                             .realm(keycloakProperties.getRealm())
                             .users()
                             .get(userId);
@@ -564,7 +569,9 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
                     }
 
                     // ✅ Client-level roles (for your client)
-                    String clientId = keycloak.realm(keycloakProperties.getRealm())
+                    String clientId = keycloak
+                            .serviceAccountKeycloakClient()
+                            .realm(keycloakProperties.getRealm())
                             .clients()
                             .findByClientId(keycloakProperties.getClientId())
                             .get(0)
@@ -618,6 +625,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         try {
 
             UserResource userResource = keycloak
+                    .serviceAccountKeycloakClient()
                     .realm(keycloakProperties.getRealm())
                     .users()
                     .get(userId);
@@ -639,7 +647,9 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             }
 
             // ✅ Client-level roles (for your client)
-            String clientId = keycloak.realm(keycloakProperties.getRealm())
+            String clientId = keycloak
+                    .serviceAccountKeycloakClient()
+                    .realm(keycloakProperties.getRealm())
                     .clients()
                     .findByClientId(keycloakProperties.getClientId())
                     .get(0)
