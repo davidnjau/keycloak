@@ -52,8 +52,8 @@ public class UserController {
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
     @PutMapping("/update-user/{userId}")
-    public ResponseEntity<ApiResponse> updateUser(@PathVariable("userId") String userId, @RequestBody UpdateUserRequest request) {
-        ApiResponse apiResponse = keycloakAuthService.updateUser(userId, request); // Ensure user info is fetched
-        return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
+    public ResponseEntity<ResponseWrapper<String>> updateUser(@PathVariable("userId") String userId, @RequestBody UpdateUserRequest request) {
+        String response = keycloakAuthService.updateUser(userId, request); // Ensure user info is fetched
+        return ResponseEntity.ok(ResponseWrapper.success(response));
     }
 }

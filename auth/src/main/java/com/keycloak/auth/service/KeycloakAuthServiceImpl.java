@@ -7,6 +7,7 @@ import com.keycloak.auth.config.KeycloakConfig;
 import com.keycloak.auth.config.KeycloakProperties;
 import com.keycloak.common.*;
 import com.keycloak.common.exception.InternalServerException;
+import com.keycloak.common.exception.UserNotFoundException;
 import com.keycloak.common.validation.UserInputValidator;
 import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.exception.ConflictException;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.core.Response;
@@ -409,207 +411,139 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         return userInfo;
     }
 
-
-    @Override
-    public ApiResponse updateUser(String userId, UpdateUserRequest request) {
-
-        try{
-
-            UserResource userResource = keycloak
-                    .serviceAccountKeycloakClient()
-                    .realm(keycloakProperties.getRealm()).users().get(userId);
-            if (userResource == null) {
-                return new ApiResponse(HttpStatus.NOT_FOUND.value(),
-                        "User not found");
-            }
-
-            UserRepresentation user = userResource.toRepresentation();
-
-            // Check each field and update only if non-null (or non-empty in case of collections)
-            if (request.getFirstName() != null && !request.getFirstName().isEmpty()) {
-                user.setFirstName(request.getFirstName());
-            }
-
-            if (request.getLastName() != null && !request.getLastName().isEmpty()) {
-                user.setLastName(request.getLastName());
-            }
-
-            // Ensure username is unique
-            if (request.getUsername() != null) {
-                // Check if username already exists in the realm (case-insensitive)
-                List<UserRepresentation> existingUsers = keycloak
-                        .serviceAccountKeycloakClient()
-                        .realm(keycloakProperties.getRealm())
-                        .users().search(request.getUsername(), true);
-                if (!existingUsers.isEmpty()){
-                    //List is not empty, so user exists
-                    log.error("User already exists: {}", request.getUsername());
-                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Username " + request.getUsername() + " already exists.");
-                }
-            }
-
-            // Ensure email is unique
-            if (request.getEmail() != null) {
-                List<UserRepresentation> existingUsers = keycloak
-                        .serviceAccountKeycloakClient()
-                        .realm(keycloakProperties.getRealm())
-                        .users().search(request.getEmail(), 0, 1);
-                if (!existingUsers.isEmpty()){
-                    //List is not empty, so user exists
-                    log.error("Email already exists: {}", request.getEmail());
-                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Email " + request.getEmail() + " already exists.");
-                }
-            }
-
-            if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-                user.setEmail(request.getEmail());
-            }
-
-            if (request.getUsername() != null && !request.getUsername().isEmpty()) {
-                user.setUsername(request.getUsername());
-            }
-
-            if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
-                Map<String, List<String>> attributes = user.getAttributes();
-                if (attributes == null) {
-                    attributes = new HashMap<>();
-                }
-                attributes.put("phoneNumber", Collections.singletonList(request.getPhoneNumber()));
-                user.setAttributes(attributes);
-            }
-
-            if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-                RealmResource realmResource = keycloak
-                        .serviceAccountKeycloakClient()
-                        .realm(keycloakProperties.getRealm());
-
-                // Fetch all available roles in the realm
-                List<RoleRepresentation> availableRoles = realmResource.roles().list();
-                Set<String> availableRoleNames = availableRoles.stream()
-                        .map(RoleRepresentation::getName)
-                        .collect(Collectors.toSet());
-
-                List<String> requestedRoles = request.getRoles();
-
-                // Identify invalid roles
-                List<String> invalidRoles = requestedRoles.stream()
-                        .filter(role -> !availableRoleNames.contains(role))
-                        .collect(Collectors.toList());
-
-                if (!invalidRoles.isEmpty()) {
-                    // Log or throw exception depending on your use case
-                    log.error("Invalid roles requested: {}", invalidRoles);
-                    return new ApiResponse(HttpStatus.BAD_REQUEST.value(), "Invalid roles requested: " + invalidRoles);
-                }
-
-                // Only map valid roles
-                List<RoleRepresentation> roleReps = requestedRoles.stream()
-                        .map(role -> realmResource.roles().get(role).toRepresentation())
-                        .collect(Collectors.toList());
-
-                // Assign roles
-                userResource.roles().realmLevel().add(roleReps);
-            }
-
-            // Always handle booleans, since they’re primitive defaults
-            if (request.getEnabled()!= null) {
-                user.setEnabled(request.getEnabled());
-            }
-            if (request.getEmailVerified() != null){
-                user.setEmailVerified(request.getEmailVerified());
-            }
-
-            // Password reset must be handled separately
-            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-
-                // 🔑 Set password
-                CredentialRepresentation passwordCred = new CredentialRepresentation();
-                passwordCred.setTemporary(false); // false = permanent password
-                passwordCred.setType(CredentialRepresentation.PASSWORD);
-                passwordCred.setValue(request.getPassword()); // assume your request DTO carries password
-
-                userResource.resetPassword(passwordCred);
-
-            }
-
-            CompletableFuture.runAsync(() -> {
-
-                try{
-                    String cacheKey = "user:" + userId;
-
-                    // Update user in Keycloak
-                    userResource.update(user);
-                    log.info("User {} updated successfully", userId);
-                    // Clear the user cache to ensure the updated user is fetched next time
-                    redisTemplate.delete(userId);
-
-                    // Get the updated user details
-                    UserResource updateUserResource = keycloak
-                            .serviceAccountKeycloakClient()
-                            .realm(keycloakProperties.getRealm())
-                            .users()
-                            .get(userId);
-                    UserRepresentation updatedUser = updateUserResource.toRepresentation();
-                    String email = updatedUser.getEmail();
-                    String fullName = updatedUser.getFirstName() + " " + updatedUser.getLastName();
-                    String username = updatedUser.getUsername();
-
-                    List<String> roles = new ArrayList<>();
-
-                    // ✅ Realm-level roles
-                    List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
-                    for (RoleRepresentation role : realmRoles) {
-                        roles.add(role.getName());
-                    }
-
-                    // ✅ Client-level roles (for your client)
-                    String clientId = keycloak
-                            .serviceAccountKeycloakClient()
-                            .realm(keycloakProperties.getRealm())
-                            .clients()
-                            .findByClientId(keycloakProperties.getClientId())
-                            .get(0)
-                            .getId();
-
-                    List<RoleRepresentation> clientRoles = userResource.roles()
-                            .clientLevel(clientId)
-                            .listEffective();
-                    for (RoleRepresentation role : clientRoles) {
-                        roles.add(role.getName());
-                    }
-
-                    List<String> rolesWithPrefix = getUserRoles(roles);
-
-                    UserInfoResponse userInfoResponse = new UserInfoResponse(
-                            userId,
-                            email,
-                            fullName,
-                            username,
-                            rolesWithPrefix);
-
-                    // Store in cache (saves full ApiResponse object containing User)
-                    redisTemplate.opsForValue().set(cacheKey, userInfoResponse, CACHE_TTL, TimeUnit.MINUTES);
-
-                    log.info("Redis User {} updated successfully", userId);
-
-                }catch (Exception e){
-                    Thread.currentThread().interrupt();
-                }
-
-            });
-
-
-
-            return new ApiResponse(HttpStatus.OK.value(),
-                    "User updated successfully");
-
-        }catch (Exception ex){
-
-            log.error("Failed to update user: {}", ex.getMessage(), ex);
-            return new ApiResponse(HttpStatus.BAD_REQUEST.value(),
-                    "Failed to update user: " + ex.getMessage());
+    private void updateUserFields(UserRepresentation user, UpdateUserRequest request) {
+        if (StringUtils.hasText(request.getFirstName())) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (StringUtils.hasText(request.getLastName())) {
+            user.setLastName(request.getLastName());
+        }
+        if (StringUtils.hasText(request.getEmail())) {
+            user.setEmail(request.getEmail());
+        }
+        if (StringUtils.hasText(request.getUsername())) {
+            user.setUsername(request.getUsername());
+        }
+        if (request.getEnabled() != null) {
+            user.setEnabled(request.getEnabled());
+        }
+        if (request.getEmailVerified() != null) {
+            user.setEmailVerified(request.getEmailVerified());
         }
 
+        // Handle custom attributes
+        if (StringUtils.hasText(request.getPhoneNumber())) {
+            Map<String, List<String>> attributes = user.getAttributes();
+            if (attributes == null) {
+                attributes = new HashMap<>();
+            }
+            attributes.put("phoneNumber", Collections.singletonList(request.getPhoneNumber()));
+            user.setAttributes(attributes);
+        }
+    }
+
+    private void updateUserRoles(UserResource userResource, List<String> requestedRoles) {
+        RealmResource realmResource = keycloak
+                .serviceAccountKeycloakClient()
+                .realm(keycloakProperties.getRealm());
+
+        // Validate roles exist
+        List<RoleRepresentation> availableRoles = realmResource.roles().list();
+        Set<String> availableRoleNames = availableRoles.stream()
+                .map(RoleRepresentation::getName)
+                .collect(Collectors.toSet());
+
+        List<String> invalidRoles = requestedRoles.stream()
+                .filter(role -> !availableRoleNames.contains(role))
+                .collect(Collectors.toList());
+
+        if (!invalidRoles.isEmpty()) {
+            throw new IllegalArgumentException("Invalid roles: " + invalidRoles);
+        }
+
+        // Map to role representations and assign
+        List<RoleRepresentation> roleReps = requestedRoles.stream()
+                .map(role -> realmResource.roles().get(role).toRepresentation())
+                .collect(Collectors.toList());
+
+        userResource.roles().realmLevel().add(roleReps);
+    }
+
+    @Override
+    public String updateUser(String userId, UpdateUserRequest request) {
+
+        log.info("Updating user: {}", userId);
+        userInputValidator.validateUpdateRequest(request);
+
+        UserResource userResource = keycloak
+                .serviceAccountKeycloakClient()
+                .realm(keycloakProperties.getRealm())
+                .users()
+                .get(userId);
+
+        UserRepresentation user = userResource.toRepresentation();
+        if (user == null) {
+            throw new UserNotFoundException("User not found: " + userId);
+        }
+
+        // Check if user already exists
+
+        String userName = request.getUsername();
+        String email = request.getEmail();
+
+        if (StringUtils.hasText(userName)){
+            if (!user.getUsername().equals(userName)) {
+                if (userExists(userName, null)) {
+                    log.warn("Username already exists {}", userName);
+                    throw new ConflictException("Username already exists");
+                }
+            }
+        }
+
+        if (StringUtils.hasText(email)){
+            if (!user.getEmail().equals(email)) {
+                if (userExists(null, email)) {
+                    log.warn("Email already exists {}", email);
+                    throw new ConflictException("Email already exists");
+                }
+            }
+        }
+
+        // Update user fields
+        updateUserFields(user, request);
+
+        // Update user in Keycloak
+        userResource.update(user);
+
+        // Handle password update separately
+        if (StringUtils.hasText(request.getPassword())) {
+            // Set password
+            setUserPassword(userResource, request.getPassword());
+        }
+
+        // Handle role updates
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            updateUserRoles(userResource, request.getRoles());
+        }
+
+        // Async cache update
+        CompletableFuture.runAsync(() -> updateUserCache(userId))
+                .exceptionally(throwable -> {
+                    log.error("Failed to update user cache for: {}", userId, throwable);
+                    return null;
+                });
+
+        log.info("User updated successfully: {}", userId);
+
+        return "User updated successfully";
+
+    }
+
+    private void updateUserCache(String userId) {
+        log.info("Deleting user cache: {}", userId);
+        redisTemplate.delete(userId);
+        // Store in cache (saves full ApiResponse object containing User)
+        fetchUserInfoFromKeycloak(userId);
     }
 
     @Override
