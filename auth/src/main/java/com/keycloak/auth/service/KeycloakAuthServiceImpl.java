@@ -68,7 +68,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = BadRequestException.class)
     public String registerUser(RegisterRequest request) throws BadRequestException{
         log.info("Starting user registration for username: {}", request.getUsername());
 
@@ -125,7 +125,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     private void assignDefaultRole(UserResource userResource, RealmResource realmResource) {
 
-        RoleRepresentation roleUser = null;
+        RoleRepresentation roleUser;
 
         List<RoleRepresentation> availableRoles = realmResource.roles().list();
 
@@ -134,6 +134,10 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
                 .findFirst();
 
         if (!roleOpt.isPresent()){
+            //Remove the created user as @Transactional annotation will not cause a rollback for Keycloak.
+            realmResource.users().get(userResource.toRepresentation().getId()).remove();
+            log.info("User removed successfully");
+
             log.warn("Default role 'ROLE_USER' does not exist in the realm.");
             throw new BadRequestException("There was an issue processing the default role.");
         }
@@ -166,24 +170,25 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     }
 
     private boolean userExists(String username, String email) {
-        try {
-            RealmResource realm = keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm());
-
-            // Check email
-            List<UserRepresentation> usersByEmail = realm.users().search(email, 0, 1);
-
-            // Check username
-            List<UserRepresentation> usersByUsername = realm.users().search(username, true);
-            if (!usersByUsername.isEmpty()) {
-                return true;
-            }
-
-            return !usersByEmail.isEmpty();
-
-        } catch (Exception e) {
-            log.error("Failed to check user existence", e);
-            throw new BadRequestException("User existence check failed");
+        RealmResource realm = keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm());
+        if (realm == null) {
+            log.warn("Realm '{}' not found while checking user existence", keycloakProperties.getRealm());
+            return false;
         }
+
+        // Defensive: check email existence
+        List<UserRepresentation> usersByEmail = Optional.ofNullable(realm.users())
+                .map(u -> u.search(email, 0, 1))
+                .orElse(Collections.emptyList());
+
+        // Defensive: check username existence
+        List<UserRepresentation> usersByUsername = Optional.ofNullable(realm.users())
+                .map(u -> u.search(username, true))
+                .orElse(Collections.emptyList());
+
+        // Return true if either exists
+        return !usersByEmail.isEmpty() || !usersByUsername.isEmpty();
+
     }
 
 

@@ -9,6 +9,7 @@ keycloak:
   admin-username: keycloakadmin
   admin-password: keycloakpassword
   principle-attribute: preferred_username
+  default-role: ROLE_USER_USER
 
 spring:
   data:
