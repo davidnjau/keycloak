@@ -1,4 +1,4 @@
-package com.keycloak.auth;
+package com.keycloak.auth.config;
 
 import lombok.Getter;
 import lombok.Setter;

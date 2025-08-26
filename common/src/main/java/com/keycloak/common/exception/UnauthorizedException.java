@@ -1,4 +1,11 @@
 package com.keycloak.common.exception;
 
-public class UnauthorizedException {
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.UNAUTHORIZED)
+public class UnauthorizedException extends ApplicationException {
+    public UnauthorizedException(String message) {
+        super(message);
+    }
 }

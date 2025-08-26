@@ -1,27 +1,16 @@
 package com.keycloak.auth.security;
 
-import com.keycloak.auth.KeycloakProperties;
+import com.keycloak.auth.config.KeycloakProperties;
 import lombok.RequiredArgsConstructor;
-import org.keycloak.adapters.springsecurity.KeycloakSecurityComponents;
-import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
 @Configuration
 @EnableWebSecurity

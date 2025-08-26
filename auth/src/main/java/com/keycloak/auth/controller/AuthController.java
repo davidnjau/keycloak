@@ -2,9 +2,13 @@ package com.keycloak.auth.controller;
 
 import com.keycloak.auth.*;
 import com.keycloak.auth.service.KeycloakAuthServiceImpl;
+import com.keycloak.common.exception.BadRequestException;
+import com.keycloak.common.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth/")
@@ -24,6 +28,5 @@ public class AuthController {
     public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(keycloakService.login(request));
     }
-
 
 }

@@ -11,6 +11,13 @@
   <artifactId>auth</artifactId>
 
   <dependencies>
+    <!-- Depends on common module -->
+    <dependency>
+      <groupId>com.keycloak</groupId>
+      <artifactId>common</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
@@ -48,6 +55,15 @@
       <version>4.4.0</version>
     </dependency>
 
+    <!--    Redis-->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
 
     <!-- Optional: Actuator for health checks -->
     <dependency>

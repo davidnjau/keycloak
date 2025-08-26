@@ -1,9 +1,8 @@
 package com.keycloak.auth.security;
 
-import com.keycloak.auth.KeycloakProperties;
+import com.keycloak.auth.config.KeycloakProperties;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;

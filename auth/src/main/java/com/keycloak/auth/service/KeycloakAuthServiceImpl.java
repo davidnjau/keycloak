@@ -3,8 +3,11 @@ package com.keycloak.auth.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.keycloak.auth.*;
+import com.keycloak.auth.config.KeycloakProperties;
+import com.keycloak.auth.config.UserInputValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.keycloak.OAuth2Constants;
@@ -13,23 +16,27 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.authorization.client.util.Http;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,34 +45,39 @@ import java.util.stream.Collectors;
 public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     /**
-     * TODO: 1. Add Redis cache for user info on the get userDetails method to improve efficiency
-     * 2. Implement password hashing and salting for user passwords
-     * 3. Implement email verification and password reset functionality
-     * 4. Implement role-based access control (RBAC)
-     * 5. Implement user profile management and update functionality
-     * 7. Implement user account management and update functionality
-     * 8. Implement user account lockout and password expiration functionality
-     * 9. Implement user account deletion functionality
-     * 10. Implement user account recovery and password reset functionality
-     * 11. Update Login and Logout functionality; Wrong credentials should be handled appropriately
-     *
+     * TODO:
+     * 1. Add Redis cache for user info on the get userDetails method to improve efficiency
+     * 2. Implement email verification
+     * 3. Update Login and Logout functionality; Wrong credentials should be handled appropriately
+     * 4. Save additional user attributes / data in my own database
      */
 
-    private final RestTemplate restTemplate = new RestTemplate();
     private final KeycloakProperties keycloakProperties;
     private final Keycloak keycloak; // Injected as a @Bean
+    private final RedisTemplate<String, Object> redisTemplate;
+    private static final long CACHE_TTL = 10; // minutes
+    private final UserInputValidator userInputValidator;
 
+    @Override
+    @Transactional
     public ApiResponse registerUser(RegisterRequest request) {
+        log.info("Starting user registration for username: {}", request.getUsername());
 
         try {
-            UserRepresentation user = new UserRepresentation();
-            user.setEnabled(true);
-            user.setUsername(request.getUsername());
-            user.setFirstName(request.getFirstName());
-            user.setLastName(request.getLastName());
-            user.setEmail(request.getEmail());
 
-            user.setEmailVerified(true); // Assuming email verification is done externally
+            // Validate input
+            userInputValidator.validateRegistrationRequest(request);
+
+            // Check if user already exists
+            if (userExists(request.getUsername(), request.getEmail())) {
+                log.warn("Registration failed - user already exists: {}", request.getUsername());
+                return new ApiResponse(HttpStatus.CONFLICT.value(), "User already exists");
+            }
+
+            UserRepresentation user = buildUserRepresentation(request);
+
+
+
 
             RealmResource realmResource = keycloak.realm(keycloakProperties.getRealm());
             UsersResource usersResource = realmResource.users();
@@ -95,16 +107,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
                             .realmLevel()
                             .add(Collections.singletonList(roleUser));
 
-                    /**
-                     * TODO: After a user registration, you can add additional custom logic here
-                     * 1. Send email verification email
-                     * 2. Save additional user attributes / data in my own database
-                     * 3. Handle user account status (e.g., activate/deactivate)
-                     * 4. Handle user account expiration
-                     * 5. Add custom logic for other user roles e.g. created by the admin interface
-                     */
-
-
                     return new ApiResponse(HttpStatus.CREATED.value(), "User has been created successfully");
                 } else if (statusCode == Response.Status.CONFLICT.getStatusCode()) {
                     log.warn("⚠️ User [{}] already exists", request.getUsername());
@@ -118,6 +120,10 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
                             "Failed to create user: " + statusCode);
                 }
             }
+        } catch (IllegalArgumentException ex){
+            log.error("User registration failed: {}", request.getUsername());
+            return new ApiResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+
         } catch (Exception ex) {
             log.error("❌ Exception while creating user [{}]: {}", request.getUsername(), ex.getMessage(), ex);
             return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -127,6 +133,40 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
+    private UserRepresentation buildUserRepresentation(RegisterRequest request) {
+        UserRepresentation user = new UserRepresentation();
+        user.setEnabled(true);
+        user.setUsername(request.getUsername());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setEmail(request.getEmail());
+        user.setEmailVerified(false); // Require email verification
+
+        return user;
+    }
+
+    private boolean userExists(String username, String email) {
+        try {
+            RealmResource realm = keycloak.realm(keycloakProperties.getRealm());
+
+            // Check username
+            List<UserRepresentation> usersByUsername = realm.users().search(username, true);
+            if (!usersByUsername.isEmpty()) {
+                return true;
+            }
+
+            // Check email
+            List<UserRepresentation> usersByEmail = realm.users().search(email, 0, 1);
+            return !usersByEmail.isEmpty();
+
+        } catch (Exception e) {
+            log.error("Error checking user existence", e);
+            return false;
+        }
+    }
+
+
+    @Override
     public ApiResponse login(LoginRequest request) {
 
         try {
@@ -161,30 +201,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
-    public ApiResponse getUserInfo(Authentication authentication) {
-        try {
-
-            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
-            Jwt jwt = jwtAuth.getToken();
-
-            String userId = jwt.getSubject();
-            String email = jwt.getClaim("email");
-            String fullName = jwt.getClaim("name");
-            String preferred_username = jwt.getClaim("preferred_username");
-            Object realmAccess = jwt.getClaim("realm_access");
-
-            List<String> rolesWithPrefix = getUserRoles(realmAccess);
-
-            // Build response
-            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, preferred_username, rolesWithPrefix);
-            return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
-
-        } catch (Exception ex) {
-            log.error("❌ User information could not be found [{}]: {}", authentication, ex.getMessage(), ex);
-            return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
-                    "Unauthorized access.");
-        }
-    }
 
     @SuppressWarnings("unchecked")
     private List<String> getUserRoles(Object rolesSource) {
@@ -220,60 +236,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         }
 
         return rolesWithPrefix;
-    }
-
-
-    @Override
-    public ApiResponse getUserDetails(String userId) {
-
-        try {
-
-            UserResource userResource = keycloak
-                    .realm(keycloakProperties.getRealm())
-                    .users()
-                    .get(userId);
-
-            UserRepresentation user = userResource.toRepresentation();
-            String email = user.getEmail();
-            String fullName = user.getFirstName() + " " + user.getLastName();
-            String username = user.getUsername();
-
-            Boolean isVerified = user.isEmailVerified();
-            Boolean isEnabled = user.isEnabled();
-
-            List<String> roles = new ArrayList<>();
-
-            // ✅ Realm-level roles
-            List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
-            for (RoleRepresentation role : realmRoles) {
-                roles.add(role.getName());
-            }
-
-            // ✅ Client-level roles (for your client)
-            String clientId = keycloak.realm(keycloakProperties.getRealm())
-                    .clients()
-                    .findByClientId(keycloakProperties.getClientId())
-                    .get(0)
-                    .getId();
-
-            List<RoleRepresentation> clientRoles = userResource.roles()
-                    .clientLevel(clientId)
-                    .listEffective();
-            for (RoleRepresentation role : clientRoles) {
-                roles.add(role.getName());
-            }
-
-            List<String> rolesWithPrefix = getUserRoles(roles);
-            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, username, rolesWithPrefix);
-            return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
-
-        }catch (Exception ex) {
-            log.error("❌ The user id could not be found [{}]: {}", userId, ex.getMessage(), ex);
-            return new ApiResponse(HttpStatus.NOT_FOUND.value(),
-                    "The user id could not be found.");
-        }
-
-
     }
 
     @Override
@@ -349,6 +311,103 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         }
 
 
+    }
+
+
+    @NotNull
+    private static LoginResponse getLoginResponse(DecodedJWT decodedJWT, String accessToken, String newRefreshToken) {
+        Date expirationDate = decodedJWT.getExpiresAt();
+
+        // Current time
+        Date now = new Date();
+
+        // Calculate difference in milliseconds
+        long diffMillis = expirationDate.getTime() - now.getTime();
+
+        // Convert to seconds, minutes, hours if needed
+        long diffSeconds = diffMillis / 1000;
+        long diffMinutes = diffSeconds / 60;
+        long diffHours = diffMinutes / 60;
+
+        return new LoginResponse(
+                accessToken,
+                newRefreshToken,
+                diffSeconds
+        );
+    }
+
+    /**
+     * Cache The following method to avoid unnecessary database calls
+     * @param authentication
+     * @return
+     */
+    @Override
+    public ApiResponse getUserInfo(Authentication authentication) {
+        try {
+            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+            Jwt jwt = jwtAuth.getToken();
+
+            String userId = jwt.getSubject();
+
+            String cacheKey = "user:" + userId;
+
+            //Check redis cache first
+            UserInfoResponse cacheUserInfoResponse = (UserInfoResponse) redisTemplate.opsForValue().get(cacheKey);
+            if (cacheUserInfoResponse!= null) {
+                return new ApiResponse(HttpStatus.OK.value(), cacheUserInfoResponse);
+            }
+
+            //Get Data from Keycloak
+            UserResource userResource = keycloak
+                    .realm(keycloakProperties.getRealm())
+                    .users()
+                    .get(userId);
+            UserRepresentation user = userResource.toRepresentation();
+            String email = user.getEmail();
+            String fullName = user.getFirstName() + " " + user.getLastName();
+            String username = user.getUsername();
+
+            Boolean isVerified = user.isEmailVerified();
+            Boolean isEnabled = user.isEnabled();
+
+            List<String> roles = new ArrayList<>();
+
+            // ✅ Realm-level roles
+            List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
+            for (RoleRepresentation role : realmRoles) {
+                roles.add(role.getName());
+            }
+
+            // ✅ Client-level roles (for your client)
+            String clientId = keycloak.realm(keycloakProperties.getRealm())
+                    .clients()
+                    .findByClientId(keycloakProperties.getClientId())
+                    .get(0)
+                    .getId();
+
+            List<RoleRepresentation> clientRoles = userResource.roles()
+                    .clientLevel(clientId)
+                    .listEffective();
+            for (RoleRepresentation role : clientRoles) {
+                roles.add(role.getName());
+            }
+
+            List<String> rolesWithPrefix = getUserRoles(roles);
+
+            // Build response
+            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, username, rolesWithPrefix);
+
+            // Store in cache (saves full ApiResponse object containing User)
+            redisTemplate.opsForValue().set(cacheKey, userInfoResponse, CACHE_TTL, TimeUnit.MINUTES);
+
+
+            return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
+
+        } catch (Exception ex) {
+            log.error("❌ User information could not be found [{}]: {}", authentication, ex.getMessage(), ex);
+            return new ApiResponse(HttpStatus.UNAUTHORIZED.value(),
+                    "Unauthorized access.");
+        }
     }
 
     @Override
@@ -465,8 +524,70 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
             }
 
-            // Update user in Keycloak
-            userResource.update(user);
+            CompletableFuture.runAsync(() -> {
+
+                try{
+                    String cacheKey = "user:" + userId;
+
+                    // Update user in Keycloak
+                    userResource.update(user);
+                    log.info("User {} updated successfully", userId);
+                    // Clear the user cache to ensure the updated user is fetched next time
+                    redisTemplate.delete(userId);
+
+                    // Get the updated user details
+                    UserResource updateUserResource = keycloak
+                            .realm(keycloakProperties.getRealm())
+                            .users()
+                            .get(userId);
+                    UserRepresentation updatedUser = updateUserResource.toRepresentation();
+                    String email = updatedUser.getEmail();
+                    String fullName = updatedUser.getFirstName() + " " + updatedUser.getLastName();
+                    String username = updatedUser.getUsername();
+
+                    List<String> roles = new ArrayList<>();
+
+                    // ✅ Realm-level roles
+                    List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
+                    for (RoleRepresentation role : realmRoles) {
+                        roles.add(role.getName());
+                    }
+
+                    // ✅ Client-level roles (for your client)
+                    String clientId = keycloak.realm(keycloakProperties.getRealm())
+                            .clients()
+                            .findByClientId(keycloakProperties.getClientId())
+                            .get(0)
+                            .getId();
+
+                    List<RoleRepresentation> clientRoles = userResource.roles()
+                            .clientLevel(clientId)
+                            .listEffective();
+                    for (RoleRepresentation role : clientRoles) {
+                        roles.add(role.getName());
+                    }
+
+                    List<String> rolesWithPrefix = getUserRoles(roles);
+
+                    UserInfoResponse userInfoResponse = new UserInfoResponse(
+                            userId,
+                            email,
+                            fullName,
+                            username,
+                            rolesWithPrefix);
+
+                    // Store in cache (saves full ApiResponse object containing User)
+                    redisTemplate.opsForValue().set(cacheKey, userInfoResponse, CACHE_TTL, TimeUnit.MINUTES);
+
+                    log.info("Redis User {} updated successfully", userId);
+
+                }catch (Exception e){
+                    Thread.currentThread().interrupt();
+                }
+
+            });
+
+
 
             return new ApiResponse(HttpStatus.OK.value(),
                     "User updated successfully");
@@ -480,26 +601,58 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
-    @NotNull
-    private static LoginResponse getLoginResponse(DecodedJWT decodedJWT, String accessToken, String newRefreshToken) {
-        Date expirationDate = decodedJWT.getExpiresAt();
+    @Override
+    @Cacheable(value = "users", key = "#userId")
+    public ApiResponse getUserDetails(String userId) {
 
-        // Current time
-        Date now = new Date();
+        try {
 
-        // Calculate difference in milliseconds
-        long diffMillis = expirationDate.getTime() - now.getTime();
+            UserResource userResource = keycloak
+                    .realm(keycloakProperties.getRealm())
+                    .users()
+                    .get(userId);
 
-        // Convert to seconds, minutes, hours if needed
-        long diffSeconds = diffMillis / 1000;
-        long diffMinutes = diffSeconds / 60;
-        long diffHours = diffMinutes / 60;
+            UserRepresentation user = userResource.toRepresentation();
+            String email = user.getEmail();
+            String fullName = user.getFirstName() + " " + user.getLastName();
+            String username = user.getUsername();
 
-        return new LoginResponse(
-                accessToken,
-                newRefreshToken,
-                diffSeconds
-        );
+            Boolean isVerified = user.isEmailVerified();
+            Boolean isEnabled = user.isEnabled();
+
+            List<String> roles = new ArrayList<>();
+
+            // ✅ Realm-level roles
+            List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
+            for (RoleRepresentation role : realmRoles) {
+                roles.add(role.getName());
+            }
+
+            // ✅ Client-level roles (for your client)
+            String clientId = keycloak.realm(keycloakProperties.getRealm())
+                    .clients()
+                    .findByClientId(keycloakProperties.getClientId())
+                    .get(0)
+                    .getId();
+
+            List<RoleRepresentation> clientRoles = userResource.roles()
+                    .clientLevel(clientId)
+                    .listEffective();
+            for (RoleRepresentation role : clientRoles) {
+                roles.add(role.getName());
+            }
+
+            List<String> rolesWithPrefix = getUserRoles(roles);
+            UserInfoResponse userInfoResponse = new UserInfoResponse(userId, email, fullName, username, rolesWithPrefix);
+            return new ApiResponse(HttpStatus.OK.value(), userInfoResponse);
+
+        }catch (Exception ex) {
+            log.error("❌ The user id could not be found [{}]: {}", userId, ex.getMessage(), ex);
+            return new ApiResponse(HttpStatus.NOT_FOUND.value(),
+                    "The user id could not be found.");
+        }
+
+
     }
 
 }
