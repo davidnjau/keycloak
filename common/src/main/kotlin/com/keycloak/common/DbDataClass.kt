@@ -1,4 +1,5 @@
-package com.keycloak.auth
+package com.keycloak.common
+
 
 data class RegisterRequest(
     val username: String,

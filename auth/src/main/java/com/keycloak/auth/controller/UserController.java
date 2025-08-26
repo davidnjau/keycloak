@@ -2,6 +2,7 @@ package com.keycloak.auth.controller;
 
 import com.keycloak.auth.*;
 import com.keycloak.auth.service.KeycloakAuthService;
+import com.keycloak.common.*;
 import com.keycloak.common.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import org.jboss.resteasy.spi.NotFoundException;

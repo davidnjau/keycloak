@@ -1,8 +1,6 @@
-package com.keycloak.auth.config;
+package com.keycloak.common.validation;
 
-import com.keycloak.auth.LoginRequest;
-import com.keycloak.auth.RegisterRequest;
-import com.keycloak.auth.UpdateUserRequest;
+import com.keycloak.common.*;
 import com.keycloak.common.exception.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

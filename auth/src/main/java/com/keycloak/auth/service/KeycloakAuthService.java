@@ -1,6 +1,7 @@
 package com.keycloak.auth.service;
 
 import com.keycloak.auth.*;
+import com.keycloak.common.*;
 import org.springframework.security.core.Authentication;
 
 public interface KeycloakAuthService {

@@ -2,6 +2,8 @@ package com.keycloak.auth.controller;
 
 import com.keycloak.auth.*;
 import com.keycloak.auth.service.KeycloakAuthServiceImpl;
+import com.keycloak.common.*;
+import com.keycloak.common.RegisterRequest;
 import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;

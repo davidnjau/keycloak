@@ -68,6 +68,14 @@
           <version>1.0.3.Final</version>
           <scope>compile</scope>
       </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-reflect</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

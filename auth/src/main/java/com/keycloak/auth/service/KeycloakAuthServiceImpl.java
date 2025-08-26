@@ -5,23 +5,16 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.keycloak.auth.*;
 import com.keycloak.auth.config.KeycloakConfig;
 import com.keycloak.auth.config.KeycloakProperties;
-import com.keycloak.auth.config.UserInputValidator;
+import com.keycloak.common.*;
+import com.keycloak.common.validation.UserInputValidator;
 import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.exception.ConflictException;
-import com.keycloak.common.exception.InternalServerException;
-import com.keycloak.common.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jetbrains.annotations.NotNull;
-import org.keycloak.OAuth2Constants;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.admin.client.token.TokenManager;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -39,7 +32,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -345,6 +337,41 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         );
     }
 
+    private List<String> extractUserRoles(UserResource userResource, String clientIdd) {
+
+        List<String> roles = new ArrayList<>();
+
+        // ✅ Realm-level roles
+        List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
+        for (RoleRepresentation role : realmRoles) {
+            roles.add(role.getName());
+        }
+
+        // ✅ Client-level roles (for your client)
+        String clientId = keycloak
+                .serviceAccountKeycloakClient()
+                .realm(keycloakProperties.getRealm())
+                .clients()
+                .findByClientId(keycloakProperties.getClientId())
+                .get(0)
+                .getId();
+
+        System.out.println("*********");
+        System.out.println("clientId "+clientId);
+        System.out.println("clientIdd "+clientIdd);
+        System.out.println("*********");
+
+        List<RoleRepresentation> clientRoles = userResource.roles()
+                .clientLevel(clientId)
+                .listEffective();
+        for (RoleRepresentation role : clientRoles) {
+            roles.add(role.getName());
+        }
+
+        return getUserRoles(roles);
+
+    }
+
     /**
      * Cache The following method to avoid unnecessary database calls
      * @param authentication
@@ -368,46 +395,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             return cacheUserInfoResponse;
         }
 
-        //Get Data from Keycloak
-        UserResource userResource = keycloak
-                .serviceAccountKeycloakClient()
-                .realm(keycloakProperties.getRealm())
-                .users()
-                .get(userId);
-        UserRepresentation user = userResource.toRepresentation();
-        String email = user.getEmail();
-        String fullName = user.getFirstName() + " " + user.getLastName();
-        String username = user.getUsername();
-
-        List<String> roles = new ArrayList<>();
-
-        // ✅ Realm-level roles
-        List<RoleRepresentation> realmRoles = userResource.roles().realmLevel().listEffective();
-        for (RoleRepresentation role : realmRoles) {
-            roles.add(role.getName());
-        }
-
-        // ✅ Client-level roles (for your client)
-        String clientId = keycloak
-                .serviceAccountKeycloakClient()
-                .realm(keycloakProperties.getRealm())
-                .clients()
-                .findByClientId(keycloakProperties.getClientId())
-                .get(0)
-                .getId();
-
-        List<RoleRepresentation> clientRoles = userResource.roles()
-                .clientLevel(clientId)
-                .listEffective();
-        for (RoleRepresentation role : clientRoles) {
-            roles.add(role.getName());
-        }
-
-        List<String> rolesWithPrefix = getUserRoles(roles);
-
-        // Build response
-        UserInfoResponse userInfoResponse = new UserInfoResponse(
-                userId, email, fullName, username, rolesWithPrefix);
+        UserInfoResponse userInfoResponse = fetchUserInfoFromKeycloak(userId);
 
         log.info("Saved user info to Redis cache: {} and retrieve data from keycloak", cacheKey);
 
@@ -416,6 +404,29 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         return userInfoResponse;
 
     }
+
+    private UserInfoResponse fetchUserInfoFromKeycloak(String userId) {
+        UserResource userResource = keycloak.serviceAccountKeycloakClient()
+                .realm(keycloakProperties.getRealm())
+                .users()
+                .get(userId);
+
+        UserRepresentation user = userResource.toRepresentation();
+        if (user == null) {
+            throw new BadRequestException("User not found: " + userId);
+        }
+
+        List<String> roles = extractUserRoles(userResource, keycloakProperties.getClientId());
+
+        return new UserInfoResponse(
+                userId,
+                user.getEmail(),
+                user.getFirstName() + " " + user.getLastName(),
+                user.getUsername(),
+                roles
+        );
+    }
+
 
     @Override
     public ApiResponse updateUser(String userId, UpdateUserRequest request) {
