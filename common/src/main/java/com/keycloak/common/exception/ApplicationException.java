@@ -1,24 +1,25 @@
 package com.keycloak.common.exception;
 
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+/**
+ * Base class for all custom application exceptions.
+ * Provides structured error handling with status codes and error codes.
+ */
+@Getter
 public class ApplicationException extends RuntimeException {
-    private final String errorCode;
+    private final HttpStatus status;
 
-    public ApplicationException(String message) {
-        super(message);
-        this.errorCode = null;
+    public ApplicationException(String details, HttpStatus status) {
+        super(details);
+        this.status = status;
     }
 
-    public ApplicationException(String message, String errorCode) {
-        super(message);
-        this.errorCode = errorCode;
+    public ApplicationException(String details, Throwable cause, HttpStatus status) {
+        super(details, cause);
+        this.status = status;
     }
 
-    public ApplicationException(String message, Throwable cause) {
-        super(message, cause);
-        this.errorCode = null;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
-    }
 }
+

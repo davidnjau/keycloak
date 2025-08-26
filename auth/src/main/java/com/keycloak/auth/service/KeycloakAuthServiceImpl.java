@@ -5,6 +5,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.keycloak.auth.*;
 import com.keycloak.auth.config.KeycloakProperties;
 import com.keycloak.auth.config.UserInputValidator;
+import com.keycloak.common.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -16,6 +17,7 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.admin.client.token.TokenManager;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -57,6 +59,14 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     private final RedisTemplate<String, Object> redisTemplate;
     private static final long CACHE_TTL = 10; // minutes
     private final UserInputValidator userInputValidator;
+
+
+    /**
+     * Returns access token string using client credentials flow (service account).
+     */
+    public String getServiceAccountToken() {
+        throw new BadRequestException("Service account token retrieval not implemented");
+    }
 
     @Override
     @Transactional

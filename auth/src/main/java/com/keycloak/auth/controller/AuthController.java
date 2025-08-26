@@ -29,4 +29,10 @@ public class AuthController {
         return ResponseEntity.ok(keycloakService.login(request));
     }
 
+    @GetMapping("service-token")
+    public ResponseEntity<ResponseWrapper<String>> serviceToken() {
+        String token = keycloakService.getServiceAccountToken();
+        return ResponseEntity.ok(ResponseWrapper.success(token, "service token"));
+    }
+
 }
