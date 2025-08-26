@@ -39,6 +39,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -65,13 +66,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     private static final long CACHE_TTL = 10; // minutes
     private final UserInputValidator userInputValidator;
 
-
-    /**
-     * Returns access token string using client credentials flow (service account).
-     */
-    public String getServiceAccountToken() {
-        throw new BadRequestException("Service account token retrieval not implemented");
-    }
 
     @Override
     @Transactional
@@ -103,39 +97,26 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         }
 
         log.info("✅ User [{}] created successfully", request.getUsername());
-        handleUserCreationResponse(response, request, usersResource, realmResource);
-
-        return request.getUsername() + " has been registered successfully.";
+        return handleUserCreationResponse(response, request, usersResource, realmResource);
 
 
     }
 
-    private ApiResponse handleUserCreationResponse(Response response,
+    private String handleUserCreationResponse(Response response,
                                                    RegisterRequest request,
                                                    UsersResource usersResource,
                                                    RealmResource realmResource) {
-        int statusCode = response.getStatus();
+        String userId = extractUserIdFromResponse(response);
 
-        try (response) {
-            if (statusCode == Response.Status.CREATED.getStatusCode()) {
-                String userId = extractUserIdFromResponse(response);
+        // Set password
+        setUserPassword(usersResource.get(userId), request.getPassword());
 
-                // Set password
-                setUserPassword(usersResource.get(userId), request.getPassword());
+        // Assign default role
+        assignDefaultRole(usersResource.get(userId), realmResource);
 
-                // Assign default role
-                assignDefaultRole(usersResource.get(userId), realmResource);
+        log.info("User created successfully: {} with ID: {}", request.getUsername(), userId);
+        return "User created successfully. Remember to check your email for the verification link.";
 
-                log.info("User created successfully: {} with ID: {}", request.getUsername(), userId);
-                return new ApiResponse(HttpStatus.CREATED.value(), "User created successfully");
-
-            } else if (statusCode == Response.Status.CONFLICT.getStatusCode()) {
-                throw new ConflictException("User already exists");
-            } else {
-                log.error("Failed to create user. Status: {}", statusCode);
-                throw new BadRequestException("Failed to create user: " + statusCode);
-            }
-        }
     }
 
     private String extractUserIdFromResponse(Response response) {
@@ -143,21 +124,25 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     }
 
     private void assignDefaultRole(UserResource userResource, RealmResource realmResource) {
-        try {
 
-            RoleRepresentation roleUser = realmResource
-                    .roles()
-                    .get("ROLE_USER")// make sure ROLE_USER exists in realm
-                    .toRepresentation();
-            userResource
-                    .roles()
-                    .realmLevel()
-                    .add(Collections.singletonList(roleUser));
+        RoleRepresentation roleUser = null;
 
-        } catch (Exception e) {
-            log.warn("Failed to assign default role", e);
-            throw new BadRequestException("Failed to assign default role. ");
+        List<RoleRepresentation> availableRoles = realmResource.roles().list();
+
+        Optional<RoleRepresentation> roleOpt = availableRoles.stream()
+                .filter(r -> keycloakProperties.getDefaultRole().equals(r.getName()))
+                .findFirst();
+
+        if (!roleOpt.isPresent()){
+            log.warn("Default role 'ROLE_USER' does not exist in the realm.");
+            throw new BadRequestException("There was an issue processing the default role.");
         }
+        roleUser = roleOpt.get();
+        userResource
+                .roles()
+                .realmLevel()
+                .add(Collections.singletonList(roleUser));
+
     }
 
     private void setUserPassword(UserResource userResource, String password) {
@@ -192,14 +177,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
             if (!usersByUsername.isEmpty()) {
                 return true;
             }
-
-            System.out.println("**********");
-            System.out.println("realm "+realm);
-            System.out.println("username "+username);
-            System.out.println("email "+email);
-            System.out.println("usersByUsername "+usersByUsername);
-            System.out.println("usersByEmail "+usersByEmail);
-            System.out.println("**********");
 
             return !usersByEmail.isEmpty();
 

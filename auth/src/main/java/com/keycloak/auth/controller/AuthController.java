@@ -30,10 +30,4 @@ public class AuthController {
         return ResponseEntity.ok(ResponseWrapper.success(loginResponse));
     }
 
-    @GetMapping("service-token")
-    public ResponseEntity<ResponseWrapper<String>> serviceToken() {
-        String token = keycloakService.getServiceAccountToken();
-        return ResponseEntity.ok(ResponseWrapper.success(token, "service token"));
-    }
-
 }

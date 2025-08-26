@@ -18,6 +18,7 @@ public class KeycloakProperties {
     private String adminUsername;
     private String adminPassword;
     private String principleAttribute;
+    private String defaultRole;
 
     public String getTokenUrl() {
         return serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
@@ -34,5 +35,7 @@ public class KeycloakProperties {
     public String getCreateUserUrl() {
         return serverUrl + "/admin/realms/" + realm + "/users";
     }
+
+
 
 }
