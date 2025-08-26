@@ -1,3 +1,4 @@
+
 package com.keycloak.auth.security;
 
 import com.keycloak.auth.config.KeycloakProperties;
@@ -22,7 +23,14 @@ public class SecurityConfig {
     private final KeycloakProperties keycloakProperties;
 
     /**
-     * Completely bypass security for static/public resources.
+     * Configures the WebSecurity to ignore certain request paths, effectively bypassing
+     * security checks for static and public resources.
+     *
+     * This method creates a WebSecurityCustomizer that instructs Spring Security to completely
+     * ignore (not apply any security checks) requests to specified URL patterns. This is typically
+     * used for publicly accessible resources like static assets.
+     *
+     * @return A WebSecurityCustomizer that ignores specified URL patterns
      */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
@@ -31,7 +39,13 @@ public class SecurityConfig {
     }
 
     /**
-     * Main security filter chain configuration.
+     * Configures the main security filter chain for the application.
+     * This method sets up various security configurations including CSRF protection,
+     * request authorization, OAuth2 resource server settings, and session management.
+     *
+     * @param http The HttpSecurity object to be configured
+     * @return A SecurityFilterChain object representing the configured security filter chain
+     * @throws Exception If an error occurs during the configuration process
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

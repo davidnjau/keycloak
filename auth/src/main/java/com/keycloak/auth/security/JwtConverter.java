@@ -1,3 +1,4 @@
+
 package com.keycloak.auth.security;
 
 import com.keycloak.auth.config.KeycloakProperties;
@@ -29,6 +30,15 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
     private final KeycloakProperties keycloakProperties;
 
 
+    /**
+     * Converts a JWT token into an AbstractAuthenticationToken.
+     * This method combines the authorities from the JWT with resource roles
+     * and creates a new JwtAuthenticationToken.
+     *
+     * @param jwt The JWT token to be converted. Must not be null.
+     * @return An AbstractAuthenticationToken containing the JWT, combined authorities,
+     *         and the principal claim name.
+     */
     @Override
     public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
 
@@ -44,6 +54,16 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
         );
     }
 
+    /**
+     * Retrieves the principal claim name from the JWT.
+     * 
+     * This method determines the claim name to be used as the principal. It defaults to
+     * the subject claim (JwtClaimNames.SUB) but can be overridden by the principle attribute
+     * specified in the Keycloak properties.
+     *
+     * @param jwt The JWT token from which to extract the claim. Must not be null.
+     * @return The value of the determined principal claim from the JWT.
+     */
     private String getPrincipleClaimName(Jwt jwt) {
         String claimName = JwtClaimNames.SUB;
         if (keycloakProperties.getPrincipleAttribute() != null) {
@@ -52,6 +72,17 @@ public class JwtConverter implements Converter<Jwt, AbstractAuthenticationToken>
         return jwt.getClaim(claimName);
     }
 
+    /**
+     * Extracts resource roles from the given JWT and converts them into a collection of GrantedAuthority objects.
+     * 
+     * This method processes the "resource_access" claim of the JWT, specifically looking for roles
+     * associated with the client ID specified in the Keycloak properties. Each role is prefixed with "ROLE_"
+     * and converted into a SimpleGrantedAuthority.
+     *
+     * @param jwt The JWT token from which to extract resource roles. Must not be null.
+     * @return A collection of GrantedAuthority objects representing the resource roles.
+     *         Returns an empty set if no resource roles are found or if the necessary claims are missing.
+     */
     private Collection<? extends GrantedAuthority> extractResourceRoles(Jwt jwt) {
         Map<String, Object> resourceAccess;
         Map<String, Object> resource;

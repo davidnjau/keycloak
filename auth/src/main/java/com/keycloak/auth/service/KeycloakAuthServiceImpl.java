@@ -1,3 +1,4 @@
+
 package com.keycloak.auth.service;
 
 import com.auth0.jwt.JWT;
@@ -48,9 +49,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     /**
      * TODO:
-     * 1. Add Redis cache for user info on the get userDetails method to improve efficiency
      * 2. Implement email verification
-     * 3. Update Login and Logout functionality; Wrong credentials should be handled appropriately
      * 4. Save additional user attributes / data in my own database
      */
 
@@ -58,9 +57,23 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 //    private final Keycloak keycloak; // Injected as a @Bean
     private final KeycloakConfig keycloak; // Injected as a @Bean
     private final RedisTemplate<String, Object> redisTemplate;
-    private static final long CACHE_TTL = 10; // minutes
     private final UserInputValidator userInputValidator;
 
+    /**
+     * Registers a new user in the Keycloak system.
+     * 
+     * This method performs the following steps:
+     * 1. Validates the registration request.
+     * 2. Checks if the user already exists.
+     * 3. Creates a new user representation.
+     * 4. Attempts to create the user in Keycloak.
+     * 5. Handles the user creation response, including setting the password and assigning default roles.
+     *
+     * @param request The RegisterRequest object containing the user's registration details.
+     * @return A String message indicating the result of the registration process.
+     * @throws BadRequestException If the registration request is invalid or the user creation fails.
+     * @throws ConflictException If a user with the same username or email already exists.
+     */
     @Override
     @Transactional(rollbackFor = BadRequestException.class)
     public String registerUser(RegisterRequest request) throws BadRequestException{
@@ -92,14 +105,24 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
         log.info("✅ User [{}] created successfully", request.getUsername());
         return handleUserCreationResponse(response, request, usersResource, realmResource);
-
-
     }
 
+
+    /**
+     * Handles the response after creating a user in Keycloak.
+     * This method extracts the user ID from the response, sets the user's password,
+     * assigns the default role to the user, and logs the successful creation.
+     *
+     * @param response The Response object from the user creation request.
+     * @param request The RegisterRequest object containing the user's registration details.
+     * @param usersResource The UsersResource object for accessing user-related operations.
+     * @param realmResource The RealmResource object for accessing realm-related operations.
+     * @return A String message confirming successful user creation and prompting for email verification.
+     */
     private String handleUserCreationResponse(Response response,
-                                                   RegisterRequest request,
-                                                   UsersResource usersResource,
-                                                   RealmResource realmResource) {
+                                              RegisterRequest request,
+                                              UsersResource usersResource,
+                                              RealmResource realmResource) {
         String userId = extractUserIdFromResponse(response);
 
         // Set password
@@ -110,13 +133,22 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
         log.info("User created successfully: {} with ID: {}", request.getUsername(), userId);
         return "User created successfully. Remember to check your email for the verification link.";
-
     }
 
     private String extractUserIdFromResponse(Response response) {
         return response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
     }
 
+    /**
+     * Assigns the default role to a user in Keycloak.
+     *
+     * This method attempts to assign the default role (as specified in keycloakProperties) to the given user.
+     * If the default role doesn't exist, it removes the user and throws an exception.
+     *
+     * @param userResource The UserResource representing the user to whom the role will be assigned.
+     * @param realmResource The RealmResource representing the Keycloak realm where the operation is performed.
+     * @throws BadRequestException If the default role does not exist in the realm.
+     */
     private void assignDefaultRole(UserResource userResource, RealmResource realmResource) {
 
         RoleRepresentation roleUser;
