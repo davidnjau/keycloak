@@ -6,7 +6,8 @@ import org.springframework.security.core.Authentication;
 public interface KeycloakAuthService {
     String registerUser(RegisterRequest request);
     LoginResponse login(LoginRequest request);
-    ApiResponse getUserInfo(Authentication authentication);
+
+    UserInfoResponse getUserInfo(Authentication authentication);
     ApiResponse getUserDetails(String userId);
     ApiResponse refreshToken(RefreshTokenDtO refreshTokenDtO);
     ApiResponse logout(Authentication authentication);

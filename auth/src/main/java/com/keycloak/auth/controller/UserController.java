@@ -2,6 +2,7 @@ package com.keycloak.auth.controller;
 
 import com.keycloak.auth.*;
 import com.keycloak.auth.service.KeycloakAuthService;
+import com.keycloak.common.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import org.jboss.resteasy.spi.NotFoundException;
 import org.keycloak.admin.client.Keycloak;
@@ -28,10 +29,10 @@ public class UserController {
      * Get user info from current token
      */
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<ResponseWrapper<UserInfoResponse>> getCurrentUser(Authentication authentication) {
 
-        ApiResponse apiResponse = keycloakAuthService.getUserInfo(authentication); // Ensure user info is fetched
-        return ResponseEntity.status(apiResponse.getStatusCode()).body(apiResponse);
+        UserInfoResponse response = keycloakAuthService.getUserInfo(authentication); // Ensure user info is fetched
+        return ResponseEntity.ok(ResponseWrapper.success(response));
     }
 
     @GetMapping("/{userId}")
