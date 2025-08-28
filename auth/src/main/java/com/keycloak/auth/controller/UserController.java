@@ -50,21 +50,25 @@ public class UserController {
     }
 
     /**
-     * Retrieves user information by user ID.
-     * 
-     * This endpoint fetches the user details for a specific user identified by their user ID.
-     * It utilizes the KeycloakAuthService to retrieve the user information from Keycloak.
+     * Retrieves user information by identifier.
      *
-     * @param userId The unique identifier of the user whose information is to be retrieved.
-     *               This is extracted from the path variable in the URL.
+     * This endpoint fetches user details based on the provided identifier and its type.
+     * The identifier can be a User ID, Username, or Application ID. The service
+     * determines the correct retrieval method depending on the supplied idType.
+     *
+     * @param identifier The value of the identifier (userId, username, or applicationId).
+     *                   Extracted from the path variable in the URL.
+     * @param idType     The type of identifier used to fetch the user.
+     *                   Accepted values: USER_ID, USERNAME, APPLICATION_ID.
      * @return ResponseEntity containing a ResponseWrapper with UserInfoResponse.
-     *         The ResponseEntity will have an HTTP status of 200 (OK) if the user
-     *         information is successfully retrieved. The ResponseWrapper contains
-     *         the UserInfoResponse object with the user's details.
+     *         Returns HTTP 200 (OK) if the user information is successfully retrieved.
      */
-    @GetMapping("/{userId}")
-    public ResponseEntity<ResponseWrapper<UserInfoResponse>> getUserById(@PathVariable("userId") String userId) {
-        UserInfoResponse response = keycloakAuthService.getUserDetails(userId); // Ensure user info is fetched
+    @GetMapping("/{identifier}")
+    public ResponseEntity<ResponseWrapper<UserInfoResponse>> getUserById(
+            @PathVariable("identifier") String identifier,
+            @RequestParam(name = "idType", defaultValue = "USER_ID") IdentifierType idType) {
+
+        UserInfoResponse response = keycloakAuthService.getUserDetails(identifier, idType); // Ensure user info is fetched return ResponseEntity.ok(ResponseWrapper.success(response));
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
     

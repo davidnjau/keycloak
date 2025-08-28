@@ -518,56 +518,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     }
 
     /**
-     * Fetches user information from Keycloak or Redis cache based on the provided user ID.
-     * This method first checks the Redis cache for the user information. If not found in cache,
-     * it retrieves the information from Keycloak and then caches it in Redis for future use.
-     *
-     * @param userId The unique identifier of the user whose information is to be fetched.
-     *               This should be a valid Keycloak user ID.
-     * @return A UserInfoResponse object containing the user's details including ID, email,
-     *         full name, username, and roles.
-     * @throws BadRequestException If the user is not found in Keycloak.
-     */
-    protected UserInfoResponse fetchUserInfoFromKeycloak(String userId) {
-        String cacheKey = "user:" + userId;
-
-        // 1. Check Redis cache
-        UserInfoResponse cachedUser = (UserInfoResponse) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedUser != null) {
-            log.info("User info fetched from Redis cache: {}", userId);
-            return cachedUser;
-        }
-
-        // 2. Fetch from Keycloak if not cached
-        UserResource userResource = keycloak.serviceAccountKeycloakClient()
-                .realm(keycloakProperties.getRealm())
-                .users()
-                .get(userId);
-
-        UserRepresentation user = userResource.toRepresentation();
-        if (user == null) {
-            log.error("User not found: {}", userId);
-            throw new BadRequestException("User not found: " + userId);
-        }
-
-        List<String> roles = extractUserRoles(userResource);
-
-        UserInfoResponse userInfo = new UserInfoResponse(
-                userId,
-                user.getEmail(),
-                user.getFirstName() + " " + user.getLastName(),
-                user.getUsername(),
-                roles
-        );
-
-        // 3. Save in Redis with TTL (optional: 1 hour here)
-        log.info("User info saved in Redis cache: {}", userId);
-        redisTemplate.opsForValue().set(cacheKey, userInfo, 1, TimeUnit.HOURS);
-
-        return userInfo;
-    }
-
-    /**
      * Updates the fields of a UserRepresentation object based on the provided UpdateUserRequest.
      * This method checks each field in the request and updates the corresponding field in the user
      * representation if a new value is provided. It also handles custom attributes like phone number.
@@ -754,15 +704,121 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
      * This method delegates the actual fetching of user information to the fetchUserInfoFromKeycloak method,
      * which handles caching and retrieval of user details from Keycloak.
      *
-     * @param userId The unique identifier of the user in Keycloak. This should be a valid Keycloak user ID.
+     * @param userInfo The unique identifier of the user in Keycloak. This should be a valid Keycloak user ID.
      * @return A UserInfoResponse object containing detailed information about the user,
      *         including their ID, email, full name, username, and roles.
      * @throws UserNotFoundException if the user with the given ID is not found in Keycloak.
      * @throws BadRequestException if there's an issue retrieving the user information from Keycloak.
      */
     @Override
-    public UserInfoResponse getUserDetails(String userId) {
-        return fetchUserInfoFromKeycloak(userId);
+    public UserInfoResponse getUserDetails(String userInfo, IdentifierType idType) {
+        log.info("Getting user details: {}", idType);
+        return getUserInfo(userInfo, idType);
+    }
+
+    /**
+     * Retrieves user information based on the provided identifier and identifier type.
+     * This method searches for a user in the Keycloak realm using different strategies
+     * depending on the type of identifier provided.
+     *
+     * @param identifier The unique identifier for the user. This could be a user ID, username,
+     *                   or application ID, depending on the value of idType.
+     * @param idType The type of identifier provided. This determines how the method
+     *               searches for the user. It should be one of the values from the
+     *               IdentifierType enum (USER_ID, USERNAME, or APPLICATION_ID).
+     * @return A UserInfoResponse object containing detailed information about the user,
+     *         including their ID, email, full name, username, and roles.
+     * @throws BadRequestException If the specified realm is not found or if an invalid
+     *                             identifier type is provided.
+     * @throws UserNotFoundException If no user is found matching the given identifier.
+     */
+    public UserInfoResponse getUserInfo(String identifier, IdentifierType idType) {
+
+        RealmResource realm = keycloak
+                .serviceAccountKeycloakClient()
+                .realm(keycloakProperties.getRealm());
+
+        if (realm == null) {
+            log.warn("Realm '{}' not found.", keycloakProperties.getRealm());
+            throw new BadRequestException("Realm cannot be found.");
+        }
+
+        try {
+            switch (idType) {
+                case USER_ID:
+                    return fetchUserInfoFromKeycloak(identifier);
+
+                case USERNAME:
+                case APPLICATION_ID:
+                    List<UserRepresentation> users = Optional.ofNullable(realm.users())
+                            .map(usersResource -> usersResource.search(identifier, true))
+                            .orElse(Collections.emptyList());
+
+                    if (users.isEmpty()) {
+                        throw new UserNotFoundException("User not found: " + identifier);
+                    }
+                    return fetchUserInfoFromKeycloak(users.get(0).getId());
+
+                default:
+                    throw new BadRequestException("Invalid identifier type: " + idType);
+            }
+        }catch (Exception exception){
+            log.error("Error fetching user info1: {}", exception.getMessage());
+            throw new BadRequestException("Error fetching user info.");
+        }
+    }
+
+
+    /**
+     * Fetches user information from Keycloak or Redis cache based on the provided user ID.
+     * This method first checks the Redis cache for the user information. If not found in cache,
+     * it retrieves the information from Keycloak and then caches it in Redis for future use.
+     *
+     * @param userId The unique identifier of the user whose information is to be fetched.
+     *               This should be a valid Keycloak user ID.
+     * @return A UserInfoResponse object containing the user's details including ID, email,
+     *         full name, username, and roles.
+     * @throws BadRequestException If the user is not found in Keycloak.
+     */
+    protected UserInfoResponse fetchUserInfoFromKeycloak(String userId) {
+        String cacheKey = "user:" + userId;
+
+        // 1. Check Redis cache
+        UserInfoResponse cachedUser = (UserInfoResponse)
+                redisTemplate.opsForValue().get(cacheKey);
+        if (cachedUser != null) {
+            log.info("User info fetched from Redis cache: {}", userId);
+            return cachedUser;
+        }
+
+        // 2. Fetch from Keycloak if not cached
+        UserResource userResource = keycloak.serviceAccountKeycloakClient()
+                .realm(keycloakProperties.getRealm())
+                .users()
+                .get(userId);
+
+        UserRepresentation user = userResource.toRepresentation();
+
+        if (user == null) {
+            log.error("User not found: {}", userId);
+            throw new BadRequestException("User not found: " + userId);
+        }
+
+        List<String> roles = extractUserRoles(userResource);
+
+        UserInfoResponse userInfo = new UserInfoResponse(
+                userId,
+                user.getEmail(),
+                user.getFirstName() + " " + user.getLastName(),
+                user.getUsername(),
+                roles
+        );
+
+        // 3. Save in Redis with TTL (optional: 1 hour here)
+        log.info("User info saved in Redis cache: {}", userId);
+        redisTemplate.opsForValue().set(cacheKey, userInfo, 1, TimeUnit.HOURS);
+
+        return userInfo;
     }
 
 }

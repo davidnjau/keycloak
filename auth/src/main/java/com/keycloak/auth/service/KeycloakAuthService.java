@@ -37,10 +37,10 @@ public interface KeycloakAuthService {
     /**
      * Retrieves the details of a specific user by their ID.
      *
-     * @param userId The ID of the user whose details are to be retrieved.
+     * @param userInfo The ID of the user whose details are to be retrieved.
      * @return A UserInfoResponse object containing the user's details.
      */
-    UserInfoResponse getUserDetails(String userId);
+    UserInfoResponse getUserDetails(String userInfo, IdentifierType idType);
 
     /**
      * Refreshes the authentication token for a user.

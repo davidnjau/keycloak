@@ -66,3 +66,8 @@ data class UpdateUserRequest(
     val enabled: Boolean? = true,
     val emailVerified: Boolean? = true
 )
+enum class IdentifierType {
+    USER_ID,
+    USERNAME,
+    APPLICATION_ID
+}
