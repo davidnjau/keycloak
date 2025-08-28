@@ -24,7 +24,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final Keycloak keycloak; // Admin client bean
     private final KeycloakAuthService keycloakAuthService;
 
     /**

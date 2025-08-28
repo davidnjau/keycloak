@@ -48,10 +48,22 @@ public class UserInputValidator {
     private static final int MAX_EMAIL_LENGTH = 100;
 
     /**
-     * Validates user registration request
+     * Validates a user registration request by performing comprehensive checks on all input fields.
      *
-     * @param request the registration request to validate
-     * @throws BadRequestException if validation fails
+     * This method performs the following validations:
+     * <ul>
+     *   <li>Username validation</li>
+     *   <li>Email validation</li>
+     *   <li>Password strength check</li>
+     *   <li>First name and last name format validation</li>
+     *   <li>SQL injection prevention for username</li>
+     *   <li>XSS attempt prevention for first name and last name</li>
+     * </ul>
+     *
+     * @param request The RegisterRequest object containing all the user registration details.
+     *                This object should include username, email, password, firstName, and lastName.
+     * @throws BadRequestException if any of the validations fail. The exception message will provide
+     *                             details about the specific validation failure.
      */
     public void validateRegistrationRequest(RegisterRequest request) {
         log.debug("Validating registration request for username: {}", request.getUsername());
@@ -70,10 +82,21 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates user login request
+     * Validates a user login request by performing various checks on the provided credentials.
      *
-     * @param request the login request to validate
-     * @throws BadRequestException if validation fails
+     * This method performs the following validations:
+     * 1. Checks if the request object is not null.
+     * 2. Ensures both username and password are provided and not empty.
+     * 3. Verifies that the username and password do not exceed maximum allowed lengths.
+     * 4. Checks for potential SQL injection attempts in the username.
+     *
+     * @param request The LoginRequest object containing the user's login credentials.
+     *                This object should contain both a username and password.
+     * @throws BadRequestException if any of the following conditions are met:
+     *         - The request object is null.
+     *         - The username or password is missing or empty.
+     *         - The username or password exceeds the maximum allowed length.
+     *         - The username contains potential SQL injection attempts.
      */
     public void validateLoginRequest(LoginRequest request) {
         log.debug("Validating login request");
@@ -105,10 +128,24 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates user update request
+     * Validates a user update request by checking various fields for correctness and security.
      *
-     * @param request the update request to validate
-     * @throws BadRequestException if validation fails
+     * This method performs validation on the following fields of the update request:
+     * - Username: Checks for validity and potential SQL injection
+     * - Email: Validates the email format
+     * - Password: Ensures it meets security requirements
+     * - First Name and Last Name: Validates format and checks for XSS attempts
+     * - Phone Number: Validates the format
+     * - Roles: Validates if present and non-empty
+     *
+     * The method only validates fields that are non-null and non-empty.
+     *
+     * @param request The UpdateUserRequest object containing the user information to be validated.
+     *                This object should contain fields like username, email, password, firstName,
+     *                lastName, phoneNumber, and roles. Can be null, which will result in an exception.
+     * @throws BadRequestException if the request is null or if any of the fields fail validation.
+     *                             The exception message will provide details about the specific
+     *                             validation failure.
      */
     public void validateUpdateRequest(UpdateUserRequest request) {
         log.debug("Validating update request");
@@ -153,7 +190,18 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates username format and constraints
+     * Validates the format and constraints of a username.
+     *
+     * This method performs several checks on the provided username:
+     * 1. Ensures the username is not empty or null.
+     * 2. Checks if the username length is within the allowed range.
+     * 3. Validates the username against a predefined pattern to ensure it only contains allowed characters.
+     * 4. Checks if the username is a reserved one.
+     *
+     * @param username The username to be validated. It should be a non-null string
+     *                 representing the user's chosen username.
+     * @throws BadRequestException if the username fails any of the validation checks. The exception
+     *                             message will provide details about the specific validation failure.
      */
     private void validateUsername(String username) {
         if (!StringUtils.hasText(username)) {
@@ -180,7 +228,19 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates email format and constraints
+     * Validates the format and constraints of an email address.
+     *
+     * This method performs several checks on the provided email:
+     * 1. Ensures the email is not empty or null.
+     * 2. Checks if the email length is within the allowed limit.
+     * 3. Validates the email against a predefined pattern to ensure it has a valid format.
+     * 4. Optionally checks if the email is from a disposable email provider.
+     *
+     * @param email The email address to be validated. It should be a non-null string
+     *              representing a valid email address.
+     * @throws BadRequestException if the email is empty, too long, has an invalid format,
+     *                             or is from a disposable email provider. The exception
+     *                             message will provide details about the specific validation failure.
      */
     private void validateEmail(String email) {
         if (!StringUtils.hasText(email)) {
@@ -202,7 +262,18 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates password strength and constraints
+     * Validates the strength and constraints of a given password.
+     *
+     * This method performs several checks on the provided password:
+     * 1. Ensures the password is not empty or null.
+     * 2. Checks if the password length is within the allowed range.
+     * 3. Validates the password against a predefined pattern to ensure it meets complexity requirements.
+     * 4. Checks if the password is a commonly used weak password.
+     *
+     * @param password The password string to be validated. It should be a non-null string
+     *                 representing the user's chosen password.
+     * @throws BadRequestException if the password fails any of the validation checks. The exception
+     *                             message will provide details about the specific validation failure.
      */
     private void validatePassword(String password) {
         if (!StringUtils.hasText(password)) {
@@ -233,7 +304,21 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates name fields (first name, last name)
+     * Validates name fields such as first name and last name.
+     *
+     * This method performs several checks on the provided name:
+     * 1. Ensures the name is not empty or null.
+     * 2. Checks if the name's length is within the allowed limit.
+     * 3. Validates the name against a predefined pattern to ensure it only contains
+     *    allowed characters (letters, spaces, apostrophes, and hyphens).
+     *
+     * @param name      The name to be validated. This could be a first name, last name,
+     *                  or any other name field.
+     * @param fieldName A string representing the name of the field being validated
+     *                  (e.g., "First name", "Last name"). This is used in error messages.
+     * @throws BadRequestException if the name is empty, too long, or contains invalid characters.
+     *                             The exception message will provide details about the specific
+     *                             validation failure.
      */
     private void validateName(String name, String fieldName) {
         if (!StringUtils.hasText(name)) {
@@ -252,7 +337,17 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates phone number format
+     * Validates the format of a given phone number.
+     *
+     * This method checks if the provided phone number matches the expected format
+     * defined by the PHONE_PATTERN regular expression. The pattern typically allows
+     * for international phone numbers with an optional '+' prefix followed by
+     * 1 to 15 digits.
+     *
+     * @param phoneNumber The phone number to be validated. It should be a non-null string
+     *                    representing a phone number.
+     * @throws BadRequestException if the phone number does not match the expected format.
+     *                             The exception message will be "Invalid phone number format".
      */
     private void validatePhoneNumber(String phoneNumber) {
         if (!PHONE_PATTERN.matcher(phoneNumber).matches()) {
@@ -261,7 +356,18 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates role names
+     * Validates a list of role names against specific criteria.
+     *
+     * This method checks each role name in the provided list to ensure it meets
+     * the following requirements:
+     * - Is not empty or null
+     * - Does not exceed 50 characters in length
+     * - Follows the pattern "ROLE_" followed by uppercase letters and underscores
+     *
+     * @param roles A List of String objects representing the role names to be validated.
+     *              Each string in this list is expected to be a valid role name.
+     * @throws BadRequestException if any role name fails to meet the validation criteria.
+     *         The exception message will provide details about the specific validation failure.
      */
     private void validateRoles(java.util.List<String> roles) {
         for (String role : roles) {
