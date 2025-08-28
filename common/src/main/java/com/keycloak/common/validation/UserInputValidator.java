@@ -281,7 +281,16 @@ public class UserInputValidator {
     }
 
     /**
-     * Checks for potential SQL injection attempts
+     * Checks for potential SQL injection attempts in the given input string.
+     *
+     * This method performs a basic check for common SQL keywords and patterns
+     * that might indicate an SQL injection attempt. It converts the input to
+     * lowercase and searches for predefined SQL-related keywords.
+     *
+     * @param input The string to be checked for potential SQL injection attempts.
+     *              If null, the method returns immediately without performing any checks.
+     * @throws BadRequestException if a potential SQL injection attempt is detected.
+     *         The exception message will be "Invalid characters detected in input".
      */
     private void validateNoSqlInjection(String input) {
         if (input == null) return;
@@ -301,7 +310,16 @@ public class UserInputValidator {
     }
 
     /**
-     * Checks for potential XSS attempts
+     * Validates input strings for potential Cross-Site Scripting (XSS) attempts.
+     *
+     * This method checks each input string against a predefined list of XSS patterns.
+     * If any of the patterns are found in the input, it logs a warning and throws an exception.
+     * The check is case-insensitive.
+     *
+     * @param inputs Variable number of input strings to be validated against XSS patterns.
+     *               Each input is checked individually. Null inputs are skipped.
+     * @throws BadRequestException if a potential XSS attempt is detected in any of the inputs.
+     *                             The exception message will be "Invalid characters detected in input".
      */
     private void validateNoXssAttempts(String... inputs) {
         for (String input : inputs) {
@@ -322,8 +340,17 @@ public class UserInputValidator {
         }
     }
 
+
     /**
-     * Checks if username is reserved
+     * Checks if a given username is reserved.
+     *
+     * This method compares the provided username against a predefined list of
+     * reserved usernames. It checks for exact matches and also for usernames
+     * that start with a reserved name followed by an underscore.
+     *
+     * @param username The username to be checked. The comparison is case-insensitive.
+     * @return {@code true} if the username is reserved (either an exact match or
+     *         starts with a reserved name followed by an underscore), {@code false} otherwise.
      */
     private boolean isReservedUsername(String username) {
         String[] reservedUsernames = {
@@ -342,7 +369,16 @@ public class UserInputValidator {
     }
 
     /**
-     * Checks if email is from a disposable email provider
+     * Checks if the provided email address is from a known disposable email provider.
+     *
+     * This method performs a simplified check against a predefined list of common
+     * disposable email domains. In a production environment, it's recommended to use
+     * a more comprehensive list or a third-party service for better accuracy.
+     *
+     * @param email The email address to be checked. The method extracts the domain
+     *              part of the email for comparison.
+     * @return {@code true} if the email's domain matches any known disposable email
+     *         provider in the predefined list, {@code false} otherwise.
      */
     private boolean isDisposableEmail(String email) {
         // This is a simplified check. In production, you might want to use
@@ -362,7 +398,15 @@ public class UserInputValidator {
     }
 
     /**
-     * Checks if password is commonly used (weak)
+     * Checks if a given password is commonly used and therefore considered weak.
+     *
+     * This method compares the provided password against a predefined list of
+     * common passwords. In a production environment, it's recommended to use a more
+     * comprehensive list or a service like HaveIBeenPwned for better security.
+     *
+     * @param password The password to be checked for commonness.
+     * @return {@code true} if the password is found in the list of common passwords,
+     *         {@code false} otherwise.
      */
     private boolean isCommonPassword(String password) {
         // This is a simplified check. In production, you might want to use
@@ -382,10 +426,16 @@ public class UserInputValidator {
     }
 
     /**
-     * Sanitizes input by removing potentially harmful characters
+     * Sanitizes input by removing potentially harmful characters and HTML tags.
      *
-     * @param input the input to sanitize
-     * @return sanitized input
+     * This method performs the following sanitization steps:
+     * 1. Removes all HTML tags.
+     * 2. Removes specific potentially harmful characters (< > " ' &).
+     * 3. Trims leading and trailing whitespace.
+     *
+     * @param input The string to be sanitized. If null, the method returns null without performing any sanitization.
+     * @return A sanitized version of the input string with potentially harmful content removed,
+     *         or null if the input was null.
      */
     public String sanitizeInput(String input) {
         if (input == null) {
@@ -399,11 +449,15 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates that input doesn't exceed maximum length
+     * Validates that the input string does not exceed a specified maximum length.
      *
-     * @param input the input to check
-     * @param maxLength maximum allowed length
-     * @param fieldName name of the field for error message
+     * This method checks if the length of the input string is within the specified maximum length.
+     * If the input exceeds the maximum length, a BadRequestException is thrown with a formatted error message.
+     *
+     * @param input     the input string to be validated. If null, no validation is performed.
+     * @param maxLength the maximum allowed length for the input string.
+     * @param fieldName the name of the field being validated, used in the error message if validation fails.
+     * @throws BadRequestException if the input string length exceeds the specified maximum length.
      */
     public void validateMaxLength(String input, int maxLength, String fieldName) {
         if (input != null && input.length() > maxLength) {
@@ -414,10 +468,15 @@ public class UserInputValidator {
     }
 
     /**
-     * Validates that required field is not empty
+     * Validates that a required field is not empty or blank.
      *
-     * @param input the input to check
-     * @param fieldName name of the field for error message
+     * This method checks if the given input string has any text content.
+     * If the input is null, empty, or contains only whitespace characters,
+     * it throws a BadRequestException with a message indicating that the field is required.
+     *
+     * @param input     the input string to be validated
+     * @param fieldName the name of the field being validated, used in the error message
+     * @throws BadRequestException if the input is null, empty, or contains only whitespace
      */
     public void validateRequired(String input, String fieldName) {
         if (!StringUtils.hasText(input)) {
