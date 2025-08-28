@@ -175,6 +175,17 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
+    /**
+     * Sets or resets the password for a user in Keycloak.
+     *
+     * This method creates a new CredentialRepresentation object with the provided password,
+     * sets it as a non-temporary credential, and uses it to reset the user's password
+     * through the Keycloak UserResource.
+     *
+     * @param userResource The UserResource object representing the user in Keycloak
+     *                     whose password is to be set or reset.
+     * @param password The new password to be set for the user.
+     */
     private void setUserPassword(UserResource userResource, String password) {
         CredentialRepresentation passwordCred = new CredentialRepresentation();
         passwordCred.setTemporary(false);
@@ -183,6 +194,17 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         userResource.resetPassword(passwordCred);
     }
 
+
+    /**
+     * Builds a UserRepresentation object from a RegisterRequest.
+     * This method creates a new UserRepresentation with the user details provided in the RegisterRequest.
+     * The user is set as enabled and email verified by default.
+     *
+     * @param request The RegisterRequest object containing the user's registration details.
+     *                It should include username, first name, last name, and email.
+     * @return A UserRepresentation object populated with the user's details,
+     *         ready to be used for creating a new user in Keycloak.
+     */
     private UserRepresentation buildUserRepresentation(RegisterRequest request) {
         UserRepresentation user = new UserRepresentation();
         user.setEnabled(true);
@@ -195,6 +217,18 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         return user;
     }
 
+    /**
+     * Checks if a user with the given username or email already exists in the Keycloak realm.
+     *
+     * This method performs a defensive check for both email and username existence.
+     * It first retrieves the realm resource and then searches for users matching
+     * the provided email and username separately.
+     *
+     * @param username The username to check for existence. Can be null if only checking email.
+     * @param email The email address to check for existence. Can be null if only checking username.
+     * @return true if a user with the given username or email exists, false otherwise.
+     *         Also returns false if the realm is not found.
+     */
     private boolean userExists(String username, String email) {
         RealmResource realm = keycloak.serviceAccountKeycloakClient().realm(keycloakProperties.getRealm());
         if (realm == null) {
@@ -217,7 +251,19 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
-
+    /**
+     * Authenticates a user and generates a login response containing access and refresh tokens.
+     *
+     * This method takes a LoginRequest object, uses the provided credentials to request
+     * an access token from Keycloak, and then constructs a LoginResponse object with
+     * the obtained token information.
+     *
+     * @param request The LoginRequest object containing the user's login credentials.
+     *                This object should include the username and password.
+     * @return A LoginResponse object containing the access token, refresh token,
+     *         and token expiration time. This response can be used for subsequent
+     *         authenticated requests to the system.
+     */
     @Override
     public LoginResponse login(LoginRequest request) {
 
@@ -237,6 +283,19 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     }
 
 
+    /**
+     * Extracts user roles from the provided roles source.
+     * This method handles two different formats of role data:
+     * 1. Roles from JWT realm_access claim (Map<String, Object>)
+     * 2. Roles directly as a List<String>
+     * It filters the roles to include only those starting with "ROLE_" prefix.
+     *
+     * @param rolesSource The source object containing role information.
+     *                    This can be either a Map<String, Object> (for JWT realm_access claim)
+     *                    or a List<String> (for direct role list).
+     * @return A List<String> containing all roles that start with "ROLE_" prefix.
+     *         Returns an empty list if no valid roles are found or if the input is null.
+     */
     @SuppressWarnings("unchecked")
     private List<String> getUserRoles(Object rolesSource) {
         List<String> rolesWithPrefix = new ArrayList<>();
@@ -273,6 +332,18 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         return rolesWithPrefix;
     }
 
+    /**
+     * Refreshes an authentication token using a provided refresh token.
+     *
+     * This method sends a request to the Keycloak server to obtain a new access token
+     * using the provided refresh token. It handles the HTTP request, processes the response,
+     * and returns a new LoginResponse object with updated token information.
+     *
+     * @param dto A RefreshTokenDtO object containing the refresh token to be used for obtaining a new access token.
+     * @return A LoginResponse object containing the new access token, refresh token, and token expiration time.
+     * @throws BadRequestException If the provided refresh token is empty.
+     * @throws InternalServerException If the token refresh process fails or returns invalid data.
+     */
     @Override
     public LoginResponse refreshToken(RefreshTokenDtO dto) {
 
@@ -321,6 +392,16 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
+    /**
+     * Logs out the authenticated user from the Keycloak realm.
+     *
+     * This method extracts the user ID from the JWT token in the authentication object,
+     * and uses it to perform a logout operation on the Keycloak server for that specific user.
+     *
+     * @param authentication The Authentication object containing the user's JWT token.
+     *                       This is typically obtained from the security context of the current session.
+     * @return A String message confirming successful logout.
+     */
     @Override
     public String logout(Authentication authentication) {
 
@@ -337,6 +418,15 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
     }
 
 
+    /**
+     * Constructs a LoginResponse object from the provided JWT and token information.
+     * This method calculates the token expiration time in seconds and creates a new LoginResponse.
+     *
+     * @param decodedJWT The decoded JWT containing the token's expiration information.
+     * @param accessToken The new access token string.
+     * @param newRefreshToken The new refresh token string.
+     * @return A LoginResponse object containing the access token, refresh token, and expiration time in seconds.
+     */
     @NotNull
     private static LoginResponse getLoginResponse(
             DecodedJWT decodedJWT,
@@ -363,6 +453,18 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         );
     }
 
+    /**
+     * Extracts and processes user roles from both realm-level and client-level in Keycloak.
+     *
+     * This method retrieves all effective roles for a user, including both realm-level
+     * and client-level roles. It then filters these roles to include only those with
+     * the "ROLE_" prefix.
+     *
+     * @param userResource The UserResource object representing the user in Keycloak
+     *                     from which to extract roles.
+     * @return A List of Strings containing all the user's roles that start with "ROLE_" prefix.
+     *         This includes both realm-level and client-level roles.
+     */
     private List<String> extractUserRoles(UserResource userResource) {
 
         List<String> roles = new ArrayList<>();
@@ -393,6 +495,17 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
+    /**
+     * Retrieves user information based on the provided authentication.
+     * This method extracts the user ID from the JWT token in the authentication object
+     * and uses it to fetch the user's information from Keycloak.
+     *
+     * @param authentication The Authentication object containing the user's JWT token.
+     *                       This is typically obtained from the security context of the current session.
+     * @return A UserInfoResponse object containing the user's details, including ID, email,
+     *         full name, username, and roles. This information is fetched from Keycloak
+     *         using the user ID extracted from the JWT token.
+     */
     @Override
     public UserInfoResponse getUserInfo(Authentication authentication) {
 
@@ -404,6 +517,17 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
+    /**
+     * Fetches user information from Keycloak or Redis cache based on the provided user ID.
+     * This method first checks the Redis cache for the user information. If not found in cache,
+     * it retrieves the information from Keycloak and then caches it in Redis for future use.
+     *
+     * @param userId The unique identifier of the user whose information is to be fetched.
+     *               This should be a valid Keycloak user ID.
+     * @return A UserInfoResponse object containing the user's details including ID, email,
+     *         full name, username, and roles.
+     * @throws BadRequestException If the user is not found in Keycloak.
+     */
     protected UserInfoResponse fetchUserInfoFromKeycloak(String userId) {
         String cacheKey = "user:" + userId;
 
@@ -443,6 +567,15 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         return userInfo;
     }
 
+    /**
+     * Updates the fields of a UserRepresentation object based on the provided UpdateUserRequest.
+     * This method checks each field in the request and updates the corresponding field in the user
+     * representation if a new value is provided. It also handles custom attributes like phone number.
+     *
+     * @param user The UserRepresentation object to be updated. This object represents the user in Keycloak.
+     * @param request The UpdateUserRequest object containing the new values for the user fields.
+     *                This object should contain only the fields that need to be updated.
+     */
     private void updateUserFields(UserRepresentation user, UpdateUserRequest request) {
         if (StringUtils.hasText(request.getFirstName())) {
             user.setFirstName(request.getFirstName());
@@ -474,6 +607,17 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         }
     }
 
+    /**
+     * Updates the roles of a user in Keycloak.
+     * This method validates the requested roles against available roles in the realm,
+     * and then assigns the valid roles to the user.
+     *
+     * @param userResource The UserResource object representing the user whose roles are to be updated.
+     *                     This should be obtained from the Keycloak client for the specific user.
+     * @param requestedRoles A List of String representing the roles to be assigned to the user.
+     *                       These roles should exist in the Keycloak realm.
+     * @throws IllegalArgumentException If any of the requested roles do not exist in the realm.
+     */
     private void updateUserRoles(UserResource userResource, List<String> requestedRoles) {
         RealmResource realmResource = keycloak
                 .serviceAccountKeycloakClient()
@@ -501,6 +645,25 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         userResource.roles().realmLevel().add(roleReps);
     }
 
+    /**
+     * Updates a user's information in Keycloak based on the provided request.
+     * This method performs the following operations:
+     * - Validates the update request
+     * - Retrieves the user from Keycloak
+     * - Checks for username and email conflicts
+     * - Updates user fields
+     * - Updates the user in Keycloak
+     * - Updates the user's password if provided
+     * - Updates the user's roles if provided
+     * - Asynchronously updates the user cache
+     *
+     * @param userId The unique identifier of the user to be updated. This should be a valid Keycloak user ID.
+     * @param request An UpdateUserRequest object containing the fields to be updated.
+     *                This can include username, email, password, roles, and other user attributes.
+     * @return A String message indicating the success of the update operation.
+     * @throws UserNotFoundException If the specified user is not found in Keycloak.
+     * @throws ConflictException If the requested username or email already exists for another user.
+     */
     @Override
     public String updateUser(String userId, UpdateUserRequest request) {
 
@@ -571,6 +734,13 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
     }
 
+    /**
+     * Updates the cache for a specific user by deleting the existing cache entry and fetching fresh data from Keycloak.
+     * This method ensures that the cached user information is up-to-date after any modifications to the user's data.
+     *
+     * @param userId The unique identifier of the user whose cache needs to be updated.
+     *               This should be a valid Keycloak user ID.
+     */
     private void updateUserCache(String userId) {
         log.info("Deleting user cache: {}", userId);
         redisTemplate.delete(userId);
@@ -578,6 +748,18 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
         fetchUserInfoFromKeycloak(userId);
     }
 
+
+    /**
+     * Retrieves detailed information about a user from Keycloak based on their user ID.
+     * This method delegates the actual fetching of user information to the fetchUserInfoFromKeycloak method,
+     * which handles caching and retrieval of user details from Keycloak.
+     *
+     * @param userId The unique identifier of the user in Keycloak. This should be a valid Keycloak user ID.
+     * @return A UserInfoResponse object containing detailed information about the user,
+     *         including their ID, email, full name, username, and roles.
+     * @throws UserNotFoundException if the user with the given ID is not found in Keycloak.
+     * @throws BadRequestException if there's an issue retrieving the user information from Keycloak.
+     */
     @Override
     public UserInfoResponse getUserDetails(String userId) {
         return fetchUserInfoFromKeycloak(userId);
