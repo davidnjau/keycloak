@@ -12,6 +12,8 @@ keycloak:
   default-role: ROLE_USER
 
 spring:
+  application:
+    name: keycloak-spring-boot-app
   cache:
     type: redis
   data:
@@ -25,6 +27,19 @@ spring:
           issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
   mvc:
     log-request-details: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus,health,metrics"
+  metrics:
+    tags:
+      application: keycloak-spring-boot-app
+  endpoint:
+    prometheus:
+      enabled: true
+
 
 logging:
   level:
