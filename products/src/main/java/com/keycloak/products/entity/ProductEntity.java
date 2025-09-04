@@ -6,21 +6,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Category entity represents hierarchical categories in the product catalog.
- * Categories support unlimited depth using an adjacency list model (parent-child)
- * and a materialized path for optimized subtree queries.
+ * Product entity represents items in the catalog.
+ * Each product belongs to a category.
  */
 @Entity
-@Table(name = "categories")
+@Table(name = "products")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Category {
+public class ProductEntity {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -38,30 +36,42 @@ public class Category {
     private String id;
 
     /**
-     * Name of the category (e.g., "Electronics", "Smartphones").
+     * Product name (e.g., "iPhone 15 Pro").
      */
     @Column(nullable = false)
     private String name;
 
     /**
-     * Parent category reference. Null for root categories.
+     * Detailed description of the product.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Category parent;
+    @Column(length = 2000)
+    private String description;
 
     /**
-     * Children of this category. Bidirectional mapping.
-     */
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Category> children = new ArrayList<>();
-
-    /**
-     * Materialized path for efficient subtree lookups.
-     * Example: /1/2/5/ indicates hierarchy from root -> subcategory -> current.
+     * Old Price of the product.
      */
     @Column(nullable = false)
-    private String path;
+    private BigDecimal oldPrice;
+
+
+    /**
+     * New Price of the product.
+     */
+    @Column(nullable = false)
+    private BigDecimal newPrice;
+
+    /**
+     * Stock Keeping Unit (SKU) identifier.
+     */
+    @Column(unique = true, nullable = false)
+    private String sku;
+
+    /**
+     * Reference to the category this product belongs to.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private CategoryEntity categoryEntity;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

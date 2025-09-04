@@ -6,19 +6,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Product entity represents items in the catalog.
- * Each product belongs to a category.
+ * Category entity represents hierarchical categories in the product catalog.
+ * Categories support unlimited depth using an adjacency list model (parent-child)
+ * and a materialized path for optimized subtree queries.
  */
 @Entity
-@Table(name = "products")
+@Table(name = "categories")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Product {
+public class CategoryEntity {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -36,42 +38,30 @@ public class Product {
     private String id;
 
     /**
-     * Product name (e.g., "iPhone 15 Pro").
+     * Name of the category (e.g., "Electronics", "Smartphones").
      */
     @Column(nullable = false)
     private String name;
 
     /**
-     * Detailed description of the product.
-     */
-    @Column(length = 2000)
-    private String description;
-
-    /**
-     * Old Price of the product.
-     */
-    @Column(nullable = false)
-    private BigDecimal oldPrice;
-
-
-    /**
-     * New Price of the product.
-     */
-    @Column(nullable = false)
-    private BigDecimal newPrice;
-
-    /**
-     * Stock Keeping Unit (SKU) identifier.
-     */
-    @Column(unique = true, nullable = false)
-    private String sku;
-
-    /**
-     * Reference to the category this product belongs to.
+     * Parent category reference. Null for root categories.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @JoinColumn(name = "parent_id")
+    private CategoryEntity parent;
+
+    /**
+     * Children of this category. Bidirectional mapping.
+     */
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CategoryEntity> children = new ArrayList<>();
+
+    /**
+     * Materialized path for efficient subtree lookups.
+     * Example: /1/2/5/ indicates hierarchy from root -> subcategory -> current.
+     */
+    @Column(nullable = false)
+    private String path;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
