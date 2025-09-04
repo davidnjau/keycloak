@@ -1,6 +1,8 @@
 package com.keycloak.products.service_impl.impl;
 
+import com.keycloak.common.DBPaginatedResult;
 import com.keycloak.common.DbProductCategory;
+import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.exception.ConflictException;
 import com.keycloak.common.exception.ContentNotFoundException;
 import com.keycloak.common.reusable.CommonReusable;
@@ -97,9 +99,14 @@ public class CategoryServiceImpl implements CategoryService {
 
         //Create a new category
         CategoryEntity category = new CategoryEntity();
+
         category.setName(dbProductCategory.getName());
-        category.setDescription(dbProductCategory.getDescription());
-        category.setPath(dbProductCategory.getPath());
+        if (dbProductCategory.getDescription()!= null) {
+            category.setDescription(dbProductCategory.getDescription());
+        }
+        if (dbProductCategory.getPath()!= null) {
+            category.setPath(dbProductCategory.getPath());
+        }
         if (dbProductCategory.getParentCategoryId()!= null) {
             category.setParent(categoryRepository.findById(
                     dbProductCategory.getParentCategoryId()
@@ -122,17 +129,19 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<DbProductCategory> getAllCategories(int page, int size, String sortBy, String order) {
+    public DBPaginatedResult getAllCategories(int page, int size, String sortBy, String order) {
         log.info("Fetching categories with page={}, size={}, sortBy={}, order={}", page, size, sortBy, order);
 
         try{
 
             Pageable pageable = commonReusable.getPageable(page, size, sortBy, order);
-            Page<CategoryEntity> result = categoryRepository.findAll(pageable);
+            Page<CategoryEntity> result = categoryRepository.findByActive(true, pageable);
+
+            log.info("Total number of categories: {}", result.getTotalElements());
 
             if (result.isEmpty()) {
                 log.warn("No categories found for the given pagination request");
-                return List.of(); // return empty immutable list
+                throw new ContentNotFoundException("No categories found");
             }
 
             List<DbProductCategory> categories = result.stream()
@@ -140,8 +149,16 @@ public class CategoryServiceImpl implements CategoryService {
                     .map(this::mapToDbProductCategory)
                     .collect(Collectors.toUnmodifiableList());
 
+            DBPaginatedResult dBPaginatedResult = new DBPaginatedResult(
+                    categories.size(),
+                    page,
+                    size,
+                    0,
+                    categories
+            );
+
             log.info("Successfully fetched {} categories", categories.size());
-            return categories;
+            return dBPaginatedResult;
 
         }catch (Exception ex){
             log.error("Error fetching categories: {}", ex.getMessage());
@@ -152,6 +169,15 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private DbProductCategory mapToDbProductCategory(CategoryEntity category) {
+
+        boolean active = category.getActive();
+        if (!active){
+            log.warn("Category with ID {} is inactive", category.getId());
+            throw new ContentNotFoundException("Category with ID "
+                    + category.getId() +
+                    " could not be retrieved as it was deleted.");
+        }
+
         return new DbProductCategory(
                 category.getId(),
                 category.getName(),
@@ -181,27 +207,48 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public DbProductCategory updateCategory(DbProductCategory dbProductCategory, String categoryId) {
         log.info("Updating category with ID: {} and new details: {}", categoryId, dbProductCategory);
-        CategoryEntity categoryEntity = categoryRepository.findById(categoryId)
-                   .orElseThrow(() -> new ContentNotFoundException("Category not found"));
 
-        if (dbProductCategory.getName()!= null) {
-            categoryEntity.setName(dbProductCategory.getName());
-        }
-        if (dbProductCategory.getDescription()!= null) {
-            categoryEntity.setDescription(dbProductCategory.getDescription());
-        }
-        if (dbProductCategory.getPath()!= null) {
-            categoryEntity.setPath(dbProductCategory.getPath());
-        }
-        if (dbProductCategory.getParentCategoryId()!= null) {
-            categoryEntity.setParent(categoryRepository.findById(
-                    dbProductCategory.getParentCategoryId()
-            ).orElse(null));
-        }
-        CategoryEntity saved = categoryRepository.save(categoryEntity);
+        try{
 
-        log.info("Category updated successfully with ID: {}", categoryId);
-        return mapToDbProductCategory(saved);
+            CategoryEntity categoryEntity = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new ContentNotFoundException("Category not found"));
+
+            if (dbProductCategory.getName()!= null) {
+                categoryEntity.setName(dbProductCategory.getName());
+            }
+            if (dbProductCategory.getDescription()!= null) {
+                categoryEntity.setDescription(dbProductCategory.getDescription());
+            }
+            if (dbProductCategory.getParentCategoryId()!= null) {
+                categoryEntity.setParent(categoryRepository.findById(
+                        dbProductCategory.getParentCategoryId()
+                ).orElse(null));
+            }
+            CategoryEntity saved = categoryRepository.save(categoryEntity);
+
+            // Update path correctly
+            if (saved.getParent() != null && dbProductCategory.getPath() != null) {
+
+                System.out.println("----------"+
+                        "Path: " + dbProductCategory.getPath() +
+                                ", Parent ID: " + saved.getParent().getId() +
+                                ", Category ID: " + saved.getId() + ", Path: "
+                );
+
+                saved.setPath(saved.getParent().getPath() + saved.getId() + "/");
+
+                categoryRepository.save(saved);
+
+            }
+
+            log.info("Category updated successfully with ID: {}", categoryId);
+            return mapToDbProductCategory(saved);
+
+        }catch (Exception exception){
+            log.error("Error updating category: {}", exception.getMessage());
+            throw new BadRequestException("Error updating category");
+        }
+
     }
 
     @Override

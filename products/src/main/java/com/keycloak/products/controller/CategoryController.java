@@ -1,5 +1,6 @@
 package com.keycloak.products.controller;
 
+import com.keycloak.common.DBPaginatedResult;
 import com.keycloak.common.DbProductCategory;
 import com.keycloak.common.response.*;
 import com.keycloak.products.service_impl.service.CategoryService;
@@ -26,13 +27,13 @@ public class CategoryController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseWrapper<List<DbProductCategory>>> getAllCategories(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String order
+    public ResponseEntity<ResponseWrapper<DBPaginatedResult>> getAllCategories(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "sortBy", defaultValue = "name") String sortBy,
+            @RequestParam(name = "order", defaultValue = "asc") String order
     ) {
-        List<DbProductCategory> response = categoryService.getAllCategories(
+        DBPaginatedResult response = categoryService.getAllCategories(
                 page, size, sortBy, order
         );
         return ResponseEntity.ok(ResponseWrapper.success(response));

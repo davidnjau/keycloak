@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="common" />
         <module name="auth" />
+        <module name="products" />
       </profile>
     </annotationProcessing>
   </component>

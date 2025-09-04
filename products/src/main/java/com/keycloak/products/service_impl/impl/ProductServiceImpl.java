@@ -47,7 +47,7 @@ public class ProductServiceImpl {
     /**
      * Finds all products in a given category.
      */
-    public List<ProductEntity> getProductsByCategory(Long categoryId) {
-        return productRepository.findByCategoryId(categoryId);
-    }
+//    public List<ProductEntity> getProductsByCategory(Long categoryId) {
+//        return productRepository.findByCategoryId(categoryId);
+//    }
 }

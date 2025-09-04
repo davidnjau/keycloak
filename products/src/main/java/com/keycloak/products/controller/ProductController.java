@@ -12,9 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProductController {
 
-    @PostMapping("create")
-    public ResponseEntity<ResponseWrapper<String>> createProduct() {
-        // Implement product creation logic
-    }
+
 
 }

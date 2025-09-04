@@ -4,7 +4,7 @@ package com.keycloak.common.exception;
 import org.springframework.http.HttpStatus;
 
 /**
- * Exception for resource not found (404).
+ * Exception for resource not found (204).
  */
 public class ContentNotFoundException extends ApplicationException {
 

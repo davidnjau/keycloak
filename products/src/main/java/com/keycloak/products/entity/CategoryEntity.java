@@ -66,7 +66,6 @@ public class CategoryEntity {
      * Materialized path for efficient subtree lookups.
      * Example: /1/2/5/ indicates hierarchy from root -> subcategory -> current.
      */
-    @Column(nullable = false)
     private String path;
 
     /**

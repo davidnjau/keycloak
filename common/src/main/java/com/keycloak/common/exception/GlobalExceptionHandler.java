@@ -81,4 +81,13 @@ public class GlobalExceptionHandler {
                                 401
                         ));
     }
+
+    @ExceptionHandler(ContentNotFoundException.class)
+    public ResponseEntity<String> handleContentNotFound(ContentNotFoundException ex) {
+        log.error("Content not found error: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(ex.getMessage());
+
+    }
 }

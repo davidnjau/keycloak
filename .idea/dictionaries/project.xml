@@ -5,6 +5,9 @@
       <w>keycloakadmin</w>
       <w>keycloakpassword</w>
       <w>resourceserver</w>
+      <w>springdb</w>
+      <w>springuser</w>
+      <w>uletbape</w>
     </words>
   </dictionary>
 </component>

@@ -1,5 +1,5 @@
 
-package com.keycloak.auth.redis;
+package com.keycloak.common.redis;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

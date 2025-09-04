@@ -1,11 +1,15 @@
 
 package com.keycloak.common.reusable;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Component;
 
+@Slf4j
+@Component
 public class CommonReusable {
 
     /**
@@ -18,10 +22,18 @@ public class CommonReusable {
      * @return A Pageable object configured with the specified pagination and sorting parameters.
      */
     public Pageable getPageable(int page, int size, String sortBy, String order) {
-        Sort sort = order.equalsIgnoreCase("desc")?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
 
+        log.info("Creating Pageable on common with page={}, size={}, sortBy={}, order={}", page, size, sortBy, order);
+        // Default sort field if not provided
+        String sortField = (sortBy == null || sortBy.isBlank()) ? "id" : sortBy;
+
+        // Determine sort direction
+        Sort.Direction direction =
+                (order != null && order.equalsIgnoreCase("desc"))
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        Sort sort = Sort.by(direction, sortField);
         return PageRequest.of(page, size, sort);
     }
 }
