@@ -2192,3 +2192,545 @@ Consider defining a bean named 'cacheManager' in your configuration.
 2025-09-04 13:35:49 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing ["Category with ID 5f76f6a2-d093-41f6-b576-373f9b9e292c could not be retrieved as it was deleted."]
 2025-09-04 13:35:49 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.keycloak.common.exception.ContentNotFoundException: Category with ID 5f76f6a2-d093-41f6-b576-373f9b9e292c could not be retrieved as it was deleted.]
 2025-09-04 13:35:49 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed 204 NO_CONTENT
+2025-09-04 13:38:31 DEBUG [http-nio-8100-exec-3] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 13:38:31 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 13:38:31 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 13:38:31 INFO  [http-nio-8100-exec-3] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 13:38:31 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 3
+2025-09-04 13:38:31 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 3 categories
+2025-09-04 13:38:31 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:38:31 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@6ec82be7]
+2025-09-04 13:38:31 DEBUG [http-nio-8100-exec-3] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:38:41 DEBUG [http-nio-8100-exec-4] o.s.web.servlet.DispatcherServlet - POST "/category/create", parameters={}
+2025-09-04 13:38:41 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#createCategory(DbProductCategory)
+2025-09-04 13:38:41 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=Phones, description=All kinds of Phones, path=null, parentCategoryId (truncated)...]
+2025-09-04 13:38:41 INFO  [http-nio-8100-exec-4] c.k.p.s.impl.CategoryServiceImpl - Creating category with name: Phones
+2025-09-04 13:38:41 ERROR [http-nio-8100-exec-4] c.k.p.s.impl.CategoryServiceImpl - Category name already exists: Phones
+2025-09-04 13:38:41 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Using @ExceptionHandler com.keycloak.common.exception.GlobalExceptionHandler#handleApplicationException(ApplicationException)
+2025-09-04 13:38:41 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:38:41 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@3dfea577]
+2025-09-04 13:38:41 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.keycloak.common.exception.ConflictException: Category name already exists]
+2025-09-04 13:38:41 DEBUG [http-nio-8100-exec-4] o.s.web.servlet.DispatcherServlet - Completed 409 CONFLICT
+2025-09-04 13:39:54 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 13:39:54 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown initiated...
+2025-09-04 13:39:54 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown completed.
+2025-09-04 13:40:02 INFO  [main] c.k.products.ProductsApplication - Starting ProductsApplication using Java 17.0.11 with PID 12051 (/Users/davidnjau/Documents/Personal/keycloak/products/target/classes started by davidnjau in /Users/davidnjau/Documents/Personal/keycloak)
+2025-09-04 13:40:02 INFO  [main] c.k.products.ProductsApplication - No active profile set, falling back to 1 default profile: "default"
+2025-09-04 13:40:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 13:40:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-04 13:40:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 100 ms. Found 2 JPA repository interfaces.
+2025-09-04 13:40:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 13:40:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-09-04 13:40:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.CategoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 13:40:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.ProductRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 13:40:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2025-09-04 13:40:03 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8100 (http)
+2025-09-04 13:40:03 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8100"]
+2025-09-04 13:40:03 INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-09-04 13:40:03 INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2025-09-04 13:40:03 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-09-04 13:40:03 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1235 ms
+2025-09-04 13:40:03 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-04 13:40:03 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2025-09-04 13:40:03 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-09-04 13:40:03 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-04 13:40:03 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Starting...
+2025-09-04 13:40:04 INFO  [main] com.zaxxer.hikari.pool.HikariPool - EcommerceHikariCP - Added connection org.postgresql.jdbc.PgConnection@4470106b
+2025-09-04 13:40:04 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Start completed.
+2025-09-04 13:40:04 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-04 13:40:04 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-04 13:40:08 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 13:40:09 INFO  [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-04 13:40:10 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-04 13:40:10 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 7 mappings in 'requestMappingHandlerMapping'
+2025-09-04 13:40:10 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-09-04 13:40:10 DEBUG [main] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-09-04 13:40:10 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8100"]
+2025-09-04 13:40:10 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8100 (http) with context path ''
+2025-09-04 13:40:10 INFO  [main] c.k.products.ProductsApplication - Started ProductsApplication in 9.294 seconds (process running for 10.028)
+2025-09-04 13:40:30 INFO  [http-nio-8100-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-04 13:40:30 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@6d76aa05
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@23263586
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='true': request parameters and headers will be shown which may lead to unsafe logging of potentially sensitive data
+2025-09-04 13:40:30 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 10 ms
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - POST "/category/create", parameters={}
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#createCategory(DbProductCategory)
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=Phones, description=All kinds of Phones, path=null, parentCategoryId (truncated)...]
+2025-09-04 13:40:30 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Creating category with name: Phones
+2025-09-04 13:40:30 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Category created successfully with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@42f1521c]
+2025-09-04 13:40:30 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:40:44 DEBUG [http-nio-8100-exec-2] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 13:40:44 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 13:40:44 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 13:40:44 INFO  [http-nio-8100-exec-2] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 13:40:44 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 4
+2025-09-04 13:40:44 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 4 categories
+2025-09-04 13:40:44 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:40:44 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@676f36fa]
+2025-09-04 13:40:44 DEBUG [http-nio-8100-exec-2] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:41:08 DEBUG [http-nio-8100-exec-3] o.s.web.servlet.DispatcherServlet - GET "/category/5f76f6a2-d093-41f6-b576-373f9b9e292c", parameters={}
+2025-09-04 13:41:08 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getCategoryById(String)
+2025-09-04 13:41:08 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Fetching category with ID: 5f76f6a2-d093-41f6-b576-373f9b9e292c
+2025-09-04 13:41:08 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched category with ID: 5f76f6a2-d093-41f6-b576-373f9b9e292c
+2025-09-04 13:41:08 WARN  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Category with ID 5f76f6a2-d093-41f6-b576-373f9b9e292c is inactive
+2025-09-04 13:41:08 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Using @ExceptionHandler com.keycloak.common.exception.GlobalExceptionHandler#handleContentNotFound(ContentNotFoundException)
+2025-09-04 13:41:08 ERROR [http-nio-8100-exec-3] c.k.c.e.GlobalExceptionHandler - Content not found error: Category with ID 5f76f6a2-d093-41f6-b576-373f9b9e292c could not be retrieved as it was deleted.
+2025-09-04 13:41:08 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'text/plain', given [*/*] and supported [text/plain, */*, application/json, application/*+json]
+2025-09-04 13:41:08 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing ["Category with ID 5f76f6a2-d093-41f6-b576-373f9b9e292c could not be retrieved as it was deleted."]
+2025-09-04 13:41:08 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.keycloak.common.exception.ContentNotFoundException: Category with ID 5f76f6a2-d093-41f6-b576-373f9b9e292c could not be retrieved as it was deleted.]
+2025-09-04 13:41:08 DEBUG [http-nio-8100-exec-3] o.s.web.servlet.DispatcherServlet - Completed 204 NO_CONTENT
+2025-09-04 13:41:22 DEBUG [http-nio-8100-exec-4] o.s.web.servlet.DispatcherServlet - GET "/category/6a57fb5a-593b-42cc-86eb-f2e99dc72a61", parameters={}
+2025-09-04 13:41:22 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getCategoryById(String)
+2025-09-04 13:41:22 INFO  [http-nio-8100-exec-4] c.k.p.s.impl.CategoryServiceImpl - Fetching category with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61
+2025-09-04 13:41:22 INFO  [http-nio-8100-exec-4] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched category with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61
+2025-09-04 13:41:22 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:41:22 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@6b009b87]
+2025-09-04 13:41:22 DEBUG [http-nio-8100-exec-4] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:41:44 DEBUG [http-nio-8100-exec-5] o.s.web.servlet.DispatcherServlet - PUT "/category/6a57fb5a-593b-42cc-86eb-f2e99dc72a61", parameters={}
+2025-09-04 13:41:44 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#updateCategory(String, DbProductCategory)
+2025-09-04 13:41:44 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c (truncated)...]
+2025-09-04 13:41:44 INFO  [http-nio-8100-exec-5] c.k.p.s.impl.CategoryServiceImpl - Updating category with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61 and new details: DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c25-8192-765196a13234)
+2025-09-04 13:41:44 INFO  [http-nio-8100-exec-5] c.k.p.s.impl.CategoryServiceImpl - Category updated successfully with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61
+2025-09-04 13:41:44 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:41:44 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@123b5a40]
+2025-09-04 13:41:44 DEBUG [http-nio-8100-exec-5] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:44:24 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 13:44:24 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown initiated...
+2025-09-04 13:44:24 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown completed.
+2025-09-04 13:44:31 INFO  [main] c.k.products.ProductsApplication - Starting ProductsApplication using Java 17.0.11 with PID 13367 (/Users/davidnjau/Documents/Personal/keycloak/products/target/classes started by davidnjau in /Users/davidnjau/Documents/Personal/keycloak)
+2025-09-04 13:44:31 INFO  [main] c.k.products.ProductsApplication - No active profile set, falling back to 1 default profile: "default"
+2025-09-04 13:44:32 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 13:44:32 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-04 13:44:32 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 92 ms. Found 2 JPA repository interfaces.
+2025-09-04 13:44:32 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 13:44:32 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-09-04 13:44:32 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.CategoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 13:44:32 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.ProductRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 13:44:32 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 3 ms. Found 0 Redis repository interfaces.
+2025-09-04 13:44:33 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8100 (http)
+2025-09-04 13:44:33 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8100"]
+2025-09-04 13:44:33 INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-09-04 13:44:33 INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2025-09-04 13:44:33 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-09-04 13:44:33 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1182 ms
+2025-09-04 13:44:33 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-04 13:44:33 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2025-09-04 13:44:33 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-09-04 13:44:33 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-04 13:44:33 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Starting...
+2025-09-04 13:44:33 INFO  [main] com.zaxxer.hikari.pool.HikariPool - EcommerceHikariCP - Added connection org.postgresql.jdbc.PgConnection@6b3b2c34
+2025-09-04 13:44:33 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Start completed.
+2025-09-04 13:44:33 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-04 13:44:34 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-04 13:44:34 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 13:44:34 INFO  [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-04 13:44:34 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-04 13:44:34 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 7 mappings in 'requestMappingHandlerMapping'
+2025-09-04 13:44:34 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-09-04 13:44:34 DEBUG [main] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-09-04 13:44:35 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8100"]
+2025-09-04 13:44:35 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8100 (http) with context path ''
+2025-09-04 13:44:35 INFO  [main] c.k.products.ProductsApplication - Started ProductsApplication in 3.66 seconds (process running for 4.246)
+2025-09-04 13:45:08 INFO  [http-nio-8100-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-04 13:45:08 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@34c050a1
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@3d3c14c3
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='true': request parameters and headers will be shown which may lead to unsafe logging of potentially sensitive data
+2025-09-04 13:45:08 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 5 ms
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - PUT "/category/6a57fb5a-593b-42cc-86eb-f2e99dc72a61", parameters={}
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#updateCategory(String, DbProductCategory)
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c (truncated)...]
+2025-09-04 13:45:08 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Updating category with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61 and new details: DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c25-8192-765196a13234)
+2025-09-04 13:45:08 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Category updated successfully with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@76ea6d03]
+2025-09-04 13:45:08 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:45:12 DEBUG [http-nio-8100-exec-2] o.s.web.servlet.DispatcherServlet - PUT "/category/6a57fb5a-593b-42cc-86eb-f2e99dc72a61", parameters={}
+2025-09-04 13:45:12 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#updateCategory(String, DbProductCategory)
+2025-09-04 13:45:12 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c (truncated)...]
+2025-09-04 13:45:12 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Updating category with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61 and new details: DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c25-8192-765196a13234)
+2025-09-04 13:45:12 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Category updated successfully with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61
+2025-09-04 13:45:12 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:45:12 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@2866fde8]
+2025-09-04 13:45:12 DEBUG [http-nio-8100-exec-2] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:45:16 DEBUG [http-nio-8100-exec-3] o.s.web.servlet.DispatcherServlet - GET "/category/6a57fb5a-593b-42cc-86eb-f2e99dc72a61", parameters={}
+2025-09-04 13:45:16 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getCategoryById(String)
+2025-09-04 13:45:16 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Fetching category with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61
+2025-09-04 13:45:16 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched category with ID: 6a57fb5a-593b-42cc-86eb-f2e99dc72a61
+2025-09-04 13:45:16 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:45:16 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@da97e78]
+2025-09-04 13:45:16 DEBUG [http-nio-8100-exec-3] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:47:21 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 13:47:21 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown initiated...
+2025-09-04 13:47:21 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown completed.
+2025-09-04 13:47:27 INFO  [main] c.k.products.ProductsApplication - Starting ProductsApplication using Java 17.0.11 with PID 14343 (/Users/davidnjau/Documents/Personal/keycloak/products/target/classes started by davidnjau in /Users/davidnjau/Documents/Personal/keycloak)
+2025-09-04 13:47:27 INFO  [main] c.k.products.ProductsApplication - No active profile set, falling back to 1 default profile: "default"
+2025-09-04 13:47:28 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 13:47:28 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-04 13:47:28 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 150 ms. Found 2 JPA repository interfaces.
+2025-09-04 13:47:28 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 13:47:28 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-09-04 13:47:28 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.CategoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 13:47:28 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.ProductRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 13:47:28 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 6 ms. Found 0 Redis repository interfaces.
+2025-09-04 13:47:28 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8100 (http)
+2025-09-04 13:47:28 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8100"]
+2025-09-04 13:47:28 INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-09-04 13:47:28 INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2025-09-04 13:47:29 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-09-04 13:47:29 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1935 ms
+2025-09-04 13:47:29 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-04 13:47:29 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2025-09-04 13:47:29 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-09-04 13:47:29 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-04 13:47:29 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Starting...
+2025-09-04 13:47:30 INFO  [main] com.zaxxer.hikari.pool.HikariPool - EcommerceHikariCP - Added connection org.postgresql.jdbc.PgConnection@4377ed24
+2025-09-04 13:47:30 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Start completed.
+2025-09-04 13:47:30 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-04 13:47:31 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-04 13:47:34 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 13:47:34 INFO  [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-04 13:47:35 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-04 13:47:35 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 7 mappings in 'requestMappingHandlerMapping'
+2025-09-04 13:47:35 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-09-04 13:47:35 DEBUG [main] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-09-04 13:47:35 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8100"]
+2025-09-04 13:47:36 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8100 (http) with context path ''
+2025-09-04 13:47:37 INFO  [main] c.k.products.ProductsApplication - Started ProductsApplication in 11.013 seconds (process running for 11.42)
+2025-09-04 13:47:43 INFO  [http-nio-8100-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-04 13:47:43 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@41fe0d98
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@36618b3b
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='true': request parameters and headers will be shown which may lead to unsafe logging of potentially sensitive data
+2025-09-04 13:47:43 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 11 ms
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - POST "/category/create", parameters={}
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#createCategory(DbProductCategory)
+2025-09-04 13:47:43 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=Phones, description=All kinds of Phones, path=null, parentCategoryId (truncated)...]
+2025-09-04 13:47:43 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Creating category with name: Phones
+2025-09-04 13:47:44 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Category created successfully with ID: 31738c8f-5dbd-42e9-b3b4-2c8934f32306
+2025-09-04 13:47:44 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:47:44 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@3ecfcf74]
+2025-09-04 13:47:44 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:47:51 DEBUG [http-nio-8100-exec-2] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 13:47:51 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 13:47:51 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 13:47:51 INFO  [http-nio-8100-exec-2] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 13:47:51 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 4
+2025-09-04 13:47:51 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 4 categories
+2025-09-04 13:47:51 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:47:51 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@4f778030]
+2025-09-04 13:47:51 DEBUG [http-nio-8100-exec-2] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:48:17 DEBUG [http-nio-8100-exec-3] o.s.web.servlet.DispatcherServlet - PUT "/category/31738c8f-5dbd-42e9-b3b4-2c8934f32306", parameters={}
+2025-09-04 13:48:17 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#updateCategory(String, DbProductCategory)
+2025-09-04 13:48:17 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c (truncated)...]
+2025-09-04 13:48:17 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Updating category with ID: 31738c8f-5dbd-42e9-b3b4-2c8934f32306 and new details: DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c25-8192-765196a13234)
+2025-09-04 13:48:17 INFO  [http-nio-8100-exec-3] c.k.p.s.impl.CategoryServiceImpl - Category updated successfully with ID: 31738c8f-5dbd-42e9-b3b4-2c8934f32306
+2025-09-04 13:48:17 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:48:17 DEBUG [http-nio-8100-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@6e96308d]
+2025-09-04 13:48:17 DEBUG [http-nio-8100-exec-3] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:48:39 DEBUG [http-nio-8100-exec-4] o.s.web.servlet.DispatcherServlet - POST "/category/create", parameters={}
+2025-09-04 13:48:39 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#createCategory(DbProductCategory)
+2025-09-04 13:48:39 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=Computers, description=All kinds of Computers, path=null, parentCate (truncated)...]
+2025-09-04 13:48:39 INFO  [http-nio-8100-exec-4] c.k.p.s.impl.CategoryServiceImpl - Creating category with name: Computers
+2025-09-04 13:48:39 INFO  [http-nio-8100-exec-4] c.k.p.s.impl.CategoryServiceImpl - Category created successfully with ID: 8f33c28e-4a75-470f-bfcb-583d06363a2d
+2025-09-04 13:48:39 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:48:39 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@10d4d531]
+2025-09-04 13:48:39 DEBUG [http-nio-8100-exec-4] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:48:42 DEBUG [http-nio-8100-exec-5] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 13:48:42 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 13:48:42 INFO  [http-nio-8100-exec-5] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 13:48:42 INFO  [http-nio-8100-exec-5] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 13:48:42 INFO  [http-nio-8100-exec-5] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 5
+2025-09-04 13:48:42 INFO  [http-nio-8100-exec-5] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 5 categories
+2025-09-04 13:48:42 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:48:42 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@1bf83351]
+2025-09-04 13:48:42 DEBUG [http-nio-8100-exec-5] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 13:49:03 DEBUG [http-nio-8100-exec-6] o.s.web.servlet.DispatcherServlet - PUT "/category/8f33c28e-4a75-470f-bfcb-583d06363a2d", parameters={}
+2025-09-04 13:49:03 DEBUG [http-nio-8100-exec-6] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#updateCategory(String, DbProductCategory)
+2025-09-04 13:49:03 DEBUG [http-nio-8100-exec-6] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c (truncated)...]
+2025-09-04 13:49:03 INFO  [http-nio-8100-exec-6] c.k.p.s.impl.CategoryServiceImpl - Updating category with ID: 8f33c28e-4a75-470f-bfcb-583d06363a2d and new details: DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c25-8192-765196a13234)
+2025-09-04 13:49:03 INFO  [http-nio-8100-exec-6] c.k.p.s.impl.CategoryServiceImpl - Category updated successfully with ID: 8f33c28e-4a75-470f-bfcb-583d06363a2d
+2025-09-04 13:49:03 DEBUG [http-nio-8100-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 13:49:03 DEBUG [http-nio-8100-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@45d97b5]
+2025-09-04 13:49:03 DEBUG [http-nio-8100-exec-6] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:10:47 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 14:10:47 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown initiated...
+2025-09-04 14:10:47 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown completed.
+2025-09-04 14:11:56 INFO  [main] c.k.products.ProductsApplication - Starting ProductsApplication using Java 17.0.11 with PID 23487 (/Users/davidnjau/Documents/Personal/keycloak/products/target/classes started by davidnjau in /Users/davidnjau/Documents/Personal/keycloak)
+2025-09-04 14:11:56 INFO  [main] c.k.products.ProductsApplication - No active profile set, falling back to 1 default profile: "default"
+2025-09-04 14:12:00 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 14:12:00 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-04 14:12:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 1487 ms. Found 2 JPA repository interfaces.
+2025-09-04 14:12:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 14:12:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-09-04 14:12:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.CategoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 14:12:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.ProductRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 14:12:02 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 7 ms. Found 0 Redis repository interfaces.
+2025-09-04 14:12:04 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8100 (http)
+2025-09-04 14:12:04 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8100"]
+2025-09-04 14:12:04 INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-09-04 14:12:04 INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2025-09-04 14:12:04 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-09-04 14:12:04 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 7741 ms
+2025-09-04 14:12:06 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-04 14:12:06 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2025-09-04 14:12:06 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-09-04 14:12:07 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-04 14:12:07 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Starting...
+2025-09-04 14:12:07 INFO  [main] com.zaxxer.hikari.pool.HikariPool - EcommerceHikariCP - Added connection org.postgresql.jdbc.PgConnection@1dcca426
+2025-09-04 14:12:07 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Start completed.
+2025-09-04 14:12:07 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-04 14:12:08 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-04 14:12:12 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 14:12:12 INFO  [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-04 14:12:13 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-04 14:12:13 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 7 mappings in 'requestMappingHandlerMapping'
+2025-09-04 14:12:13 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-09-04 14:12:13 DEBUG [main] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-09-04 14:12:13 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8100"]
+2025-09-04 14:12:13 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8100 (http) with context path ''
+2025-09-04 14:12:13 INFO  [main] c.k.products.ProductsApplication - Started ProductsApplication in 19.561 seconds (process running for 24.112)
+2025-09-04 14:12:38 INFO  [http-nio-8100-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-04 14:12:38 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-09-04 14:12:38 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-09-04 14:12:38 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-09-04 14:12:38 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@3fecdd00
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@3763aafd
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='true': request parameters and headers will be shown which may lead to unsafe logging of potentially sensitive data
+2025-09-04 14:12:39 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 21 ms
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - PUT "/category/8f33c28e-4a75-470f-bfcb-583d06363a2d", parameters={}
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#updateCategory(String, DbProductCategory)
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c (truncated)...]
+2025-09-04 14:12:39 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Updating category with ID: 8f33c28e-4a75-470f-bfcb-583d06363a2d and new details: DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c25-8192-765196a13234, childrenCategoryList=[])
+2025-09-04 14:12:39 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Category updated successfully with ID: 8f33c28e-4a75-470f-bfcb-583d06363a2d
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@3d3ee32e]
+2025-09-04 14:12:39 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:29:31 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 14:29:31 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown initiated...
+2025-09-04 14:29:31 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown completed.
+2025-09-04 14:29:37 INFO  [main] c.k.products.ProductsApplication - Starting ProductsApplication using Java 17.0.11 with PID 29656 (/Users/davidnjau/Documents/Personal/keycloak/products/target/classes started by davidnjau in /Users/davidnjau/Documents/Personal/keycloak)
+2025-09-04 14:29:37 INFO  [main] c.k.products.ProductsApplication - No active profile set, falling back to 1 default profile: "default"
+2025-09-04 14:29:38 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 14:29:38 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-04 14:29:38 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 110 ms. Found 2 JPA repository interfaces.
+2025-09-04 14:29:38 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 14:29:38 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-09-04 14:29:38 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.CategoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 14:29:38 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.ProductRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 14:29:38 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 4 ms. Found 0 Redis repository interfaces.
+2025-09-04 14:29:38 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8100 (http)
+2025-09-04 14:29:38 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8100"]
+2025-09-04 14:29:38 INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-09-04 14:29:38 INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2025-09-04 14:29:38 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-09-04 14:29:38 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 958 ms
+2025-09-04 14:29:38 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-04 14:29:38 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2025-09-04 14:29:38 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-09-04 14:29:39 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-04 14:29:39 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Starting...
+2025-09-04 14:29:39 INFO  [main] com.zaxxer.hikari.pool.HikariPool - EcommerceHikariCP - Added connection org.postgresql.jdbc.PgConnection@12548f9a
+2025-09-04 14:29:39 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Start completed.
+2025-09-04 14:29:39 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-04 14:29:39 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-04 14:29:40 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 14:29:40 INFO  [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-04 14:29:40 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-04 14:29:40 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 7 mappings in 'requestMappingHandlerMapping'
+2025-09-04 14:29:40 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-09-04 14:29:40 DEBUG [main] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-09-04 14:29:41 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8100"]
+2025-09-04 14:29:41 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8100 (http) with context path ''
+2025-09-04 14:29:41 INFO  [main] c.k.products.ProductsApplication - Started ProductsApplication in 3.862 seconds (process running for 4.253)
+2025-09-04 14:32:01 INFO  [http-nio-8100-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-04 14:32:01 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@2403c1c5
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@4e2ad1f2
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='true': request parameters and headers will be shown which may lead to unsafe logging of potentially sensitive data
+2025-09-04 14:32:01 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 35 ms
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - PUT "/category/8f33c28e-4a75-470f-bfcb-583d06363a2d", parameters={}
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#updateCategory(String, DbProductCategory)
+2025-09-04 14:32:01 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c (truncated)...]
+2025-09-04 14:32:01 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Updating category with ID: 8f33c28e-4a75-470f-bfcb-583d06363a2d and new details: DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=b895ca8a-3938-4c25-8192-765196a13234, childrenCategoryList=[])
+2025-09-04 14:32:02 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Category updated successfully with ID: 8f33c28e-4a75-470f-bfcb-583d06363a2d
+2025-09-04 14:32:02 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:32:02 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@6eafb8fc]
+2025-09-04 14:32:02 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:32:06 DEBUG [http-nio-8100-exec-2] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 14:32:06 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 14:32:06 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 14:32:06 INFO  [http-nio-8100-exec-2] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 14:32:06 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 5
+2025-09-04 14:32:06 INFO  [http-nio-8100-exec-2] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 5 categories
+2025-09-04 14:32:06 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:32:06 DEBUG [http-nio-8100-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@2d2ac896]
+2025-09-04 14:32:06 DEBUG [http-nio-8100-exec-2] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:36:30 DEBUG [http-nio-8100-exec-4] o.s.web.servlet.DispatcherServlet - POST "/category/create", parameters={}
+2025-09-04 14:36:30 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#createCategory(DbProductCategory)
+2025-09-04 14:36:30 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=Infinix, description=Phone Types, path=null, parentCategoryId=null,  (truncated)...]
+2025-09-04 14:36:30 INFO  [http-nio-8100-exec-4] c.k.p.s.impl.CategoryServiceImpl - Creating category with name: Infinix
+2025-09-04 14:36:31 INFO  [http-nio-8100-exec-4] c.k.p.s.impl.CategoryServiceImpl - Category created successfully with ID: fe07ffa4-665d-49de-b337-11ce999abcc3
+2025-09-04 14:36:31 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:36:31 DEBUG [http-nio-8100-exec-4] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@1bab2f2f]
+2025-09-04 14:36:31 DEBUG [http-nio-8100-exec-4] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:36:38 DEBUG [http-nio-8100-exec-5] o.s.web.servlet.DispatcherServlet - POST "/category/create", parameters={}
+2025-09-04 14:36:38 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#createCategory(DbProductCategory)
+2025-09-04 14:36:38 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=Iphone, description=Phone Types, path=null, parentCategoryId=null, c (truncated)...]
+2025-09-04 14:36:38 INFO  [http-nio-8100-exec-5] c.k.p.s.impl.CategoryServiceImpl - Creating category with name: Iphone
+2025-09-04 14:36:38 INFO  [http-nio-8100-exec-5] c.k.p.s.impl.CategoryServiceImpl - Category created successfully with ID: 87cbd389-1014-42ce-aa01-0d30891e9524
+2025-09-04 14:36:38 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:36:38 DEBUG [http-nio-8100-exec-5] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@759a9f2e]
+2025-09-04 14:36:38 DEBUG [http-nio-8100-exec-5] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:36:43 DEBUG [http-nio-8100-exec-6] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 14:36:43 DEBUG [http-nio-8100-exec-6] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 14:36:43 INFO  [http-nio-8100-exec-6] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 14:36:43 INFO  [http-nio-8100-exec-6] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 14:36:43 INFO  [http-nio-8100-exec-6] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 7
+2025-09-04 14:36:43 INFO  [http-nio-8100-exec-6] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 7 categories
+2025-09-04 14:36:43 DEBUG [http-nio-8100-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:36:43 DEBUG [http-nio-8100-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@6bbc8144]
+2025-09-04 14:36:43 DEBUG [http-nio-8100-exec-6] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:37:01 DEBUG [http-nio-8100-exec-7] o.s.web.servlet.DispatcherServlet - PUT "/category/87cbd389-1014-42ce-aa01-0d30891e9524", parameters={}
+2025-09-04 14:37:01 DEBUG [http-nio-8100-exec-7] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#updateCategory(String, DbProductCategory)
+2025-09-04 14:37:01 DEBUG [http-nio-8100-exec-7] o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json;charset=UTF-8" to [DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=31738c8f-5dbd-42 (truncated)...]
+2025-09-04 14:37:01 INFO  [http-nio-8100-exec-7] c.k.p.s.impl.CategoryServiceImpl - Updating category with ID: 87cbd389-1014-42ce-aa01-0d30891e9524 and new details: DbProductCategory(id=null, name=null, description=null, path=null, parentCategoryId=31738c8f-5dbd-42e9-b3b4-2c8934f32306, childrenCategoryList=[])
+2025-09-04 14:37:01 INFO  [http-nio-8100-exec-7] c.k.p.s.impl.CategoryServiceImpl - Category updated successfully with ID: 87cbd389-1014-42ce-aa01-0d30891e9524
+2025-09-04 14:37:01 DEBUG [http-nio-8100-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:37:01 DEBUG [http-nio-8100-exec-7] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@2bd5fa9f]
+2025-09-04 14:37:01 DEBUG [http-nio-8100-exec-7] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:37:09 DEBUG [http-nio-8100-exec-8] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 14:37:09 DEBUG [http-nio-8100-exec-8] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 14:37:09 INFO  [http-nio-8100-exec-8] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 14:37:09 INFO  [http-nio-8100-exec-8] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 14:37:09 INFO  [http-nio-8100-exec-8] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 7
+2025-09-04 14:37:09 INFO  [http-nio-8100-exec-8] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 7 categories
+2025-09-04 14:37:09 DEBUG [http-nio-8100-exec-8] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:37:09 DEBUG [http-nio-8100-exec-8] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@30a7cd9e]
+2025-09-04 14:37:09 DEBUG [http-nio-8100-exec-8] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 14:41:51 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 14:41:51 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown initiated...
+2025-09-04 14:41:51 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown completed.
+2025-09-04 14:41:58 INFO  [main] c.k.products.ProductsApplication - Starting ProductsApplication using Java 17.0.11 with PID 33232 (/Users/davidnjau/Documents/Personal/keycloak/products/target/classes started by davidnjau in /Users/davidnjau/Documents/Personal/keycloak)
+2025-09-04 14:41:58 INFO  [main] c.k.products.ProductsApplication - No active profile set, falling back to 1 default profile: "default"
+2025-09-04 14:41:59 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 14:41:59 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-04 14:41:59 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 78 ms. Found 2 JPA repository interfaces.
+2025-09-04 14:41:59 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 14:41:59 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-09-04 14:41:59 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.CategoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 14:41:59 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.ProductRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 14:41:59 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 2 ms. Found 0 Redis repository interfaces.
+2025-09-04 14:41:59 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8100 (http)
+2025-09-04 14:41:59 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8100"]
+2025-09-04 14:41:59 INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-09-04 14:41:59 INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2025-09-04 14:41:59 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-09-04 14:41:59 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 851 ms
+2025-09-04 14:41:59 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-04 14:41:59 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2025-09-04 14:41:59 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-09-04 14:41:59 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-04 14:41:59 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Starting...
+2025-09-04 14:42:00 INFO  [main] com.zaxxer.hikari.pool.HikariPool - EcommerceHikariCP - Added connection org.postgresql.jdbc.PgConnection@4470106b
+2025-09-04 14:42:00 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Start completed.
+2025-09-04 14:42:00 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-04 14:42:00 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-04 14:42:01 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 14:42:01 INFO  [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-04 14:42:01 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-04 14:42:01 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 7 mappings in 'requestMappingHandlerMapping'
+2025-09-04 14:42:01 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-09-04 14:42:01 DEBUG [main] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-09-04 14:42:01 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8100"]
+2025-09-04 14:42:01 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8100 (http) with context path ''
+2025-09-04 14:42:01 INFO  [main] c.k.products.ProductsApplication - Started ProductsApplication in 3.272 seconds (process running for 3.605)
+2025-09-04 14:42:14 INFO  [http-nio-8100-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-04 14:42:14 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@6d76aa05
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@23263586
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='true': request parameters and headers will be shown which may lead to unsafe logging of potentially sensitive data
+2025-09-04 14:42:14 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 14:42:14 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 14:42:14 INFO  [http-nio-8100-exec-1] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 14:42:14 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 7
+2025-09-04 14:42:14 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 4 categories
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@3c3bbf93]
+2025-09-04 14:42:14 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed 200 OK
+2025-09-04 15:08:48 INFO  [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 15:08:48 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown initiated...
+2025-09-04 15:08:48 INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Shutdown completed.
+2025-09-04 15:08:54 INFO  [main] c.k.products.ProductsApplication - Starting ProductsApplication using Java 17.0.11 with PID 41436 (/Users/davidnjau/Documents/Personal/keycloak/products/target/classes started by davidnjau in /Users/davidnjau/Documents/Personal/keycloak)
+2025-09-04 15:08:54 INFO  [main] c.k.products.ProductsApplication - No active profile set, falling back to 1 default profile: "default"
+2025-09-04 15:08:55 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 15:08:55 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-04 15:08:55 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 79 ms. Found 2 JPA repository interfaces.
+2025-09-04 15:08:55 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-04 15:08:55 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-09-04 15:08:55 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.CategoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 15:08:55 INFO  [main] o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.keycloak.products.repository.ProductRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-04 15:08:55 INFO  [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 2 ms. Found 0 Redis repository interfaces.
+2025-09-04 15:08:55 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8100 (http)
+2025-09-04 15:08:55 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8100"]
+2025-09-04 15:08:55 INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-09-04 15:08:55 INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2025-09-04 15:08:55 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-09-04 15:08:55 INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1053 ms
+2025-09-04 15:08:56 INFO  [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-04 15:08:56 INFO  [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2025-09-04 15:08:56 INFO  [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-09-04 15:08:56 INFO  [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-04 15:08:56 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Starting...
+2025-09-04 15:08:56 INFO  [main] com.zaxxer.hikari.pool.HikariPool - EcommerceHikariCP - Added connection org.postgresql.jdbc.PgConnection@6bc25ac2
+2025-09-04 15:08:56 INFO  [main] com.zaxxer.hikari.HikariDataSource - EcommerceHikariCP - Start completed.
+2025-09-04 15:08:56 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-04 15:08:56 INFO  [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-04 15:08:57 INFO  [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-04 15:08:58 INFO  [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-04 15:08:58 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-04 15:08:58 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerMapping - 7 mappings in 'requestMappingHandlerMapping'
+2025-09-04 15:08:58 DEBUG [main] o.s.w.s.m.m.a.RequestMappingHandlerAdapter - ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-09-04 15:08:58 DEBUG [main] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - ControllerAdvice beans: 1 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-09-04 15:08:58 INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8100"]
+2025-09-04 15:08:58 INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8100 (http) with context path ''
+2025-09-04 15:08:58 INFO  [main] c.k.products.ProductsApplication - Started ProductsApplication in 4.53 seconds (process running for 4.833)
+2025-09-04 15:11:13 INFO  [http-nio-8100-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-09-04 15:11:13 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected StandardServletMultipartResolver
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected AcceptHeaderLocaleResolver
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected FixedThemeResolver
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@2ea3f905
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Detected org.springframework.web.servlet.support.SessionFlashMapManager@4c2ad035
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - enableLoggingRequestDetails='true': request parameters and headers will be shown which may lead to unsafe logging of potentially sensitive data
+2025-09-04 15:11:13 INFO  [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 42 ms
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - GET "/category/", parameters={}
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.keycloak.products.controller.CategoryController#getAllCategories(int, int, String, String)
+2025-09-04 15:11:13 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Fetching categories with page=0, size=10, sortBy=name, order=asc
+2025-09-04 15:11:13 INFO  [http-nio-8100-exec-1] c.k.common.reusable.CommonReusable - Creating Pageable on common with page=0, size=10, sortBy=name, order=asc
+2025-09-04 15:11:13 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Total number of categories: 7
+2025-09-04 15:11:13 INFO  [http-nio-8100-exec-1] c.k.p.s.impl.CategoryServiceImpl - Successfully fetched 4 categories
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Using 'application/json', given [*/*] and supported [application/json, application/*+json]
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.w.s.m.m.a.HttpEntityMethodProcessor - Writing [com.keycloak.common.response.ResponseWrapper@4d56f26a]
+2025-09-04 15:11:13 DEBUG [http-nio-8100-exec-1] o.s.web.servlet.DispatcherServlet - Completed 200 OK

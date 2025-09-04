@@ -96,8 +96,11 @@ data class DbProductCategory(
     val description: String?,
     val path: String?,
     val parentCategoryId: String?,
+    val childrenCategoryList: List<DbProductCategory>
 ){
-    constructor() : this(null, null, null, null, null)
+    constructor() : this(null, null,
+        null, null, null,
+        emptyList())
 }
 data class DbProductImage(
     val id: String?,

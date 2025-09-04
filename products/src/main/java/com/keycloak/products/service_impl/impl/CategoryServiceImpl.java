@@ -70,7 +70,7 @@ public class CategoryServiceImpl implements CategoryService {
     /**
      * Fetches a category subtree using CTE recursion.
      */
-    public List<CategoryEntity> getSubtree(Long categoryId) {
+    public List<CategoryEntity> getSubtree(String categoryId) {
         return categoryRepository.findSubtree(categoryId);
     }
 
@@ -91,7 +91,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         log.info("Creating category with name: {}", dbProductCategory.getName());
         //Check if the name exists
-        Optional<CategoryEntity> categoryEntity = categoryRepository.findByName(dbProductCategory.getName());
+        Optional<CategoryEntity> categoryEntity = categoryRepository.findByNameAndActive(dbProductCategory.getName(), true);
         if (categoryEntity.isPresent()) {
             log.error("Category name already exists: {}", dbProductCategory.getName());
             throw new ConflictException("Category name already exists");
@@ -144,10 +144,19 @@ public class CategoryServiceImpl implements CategoryService {
                 throw new ContentNotFoundException("No categories found");
             }
 
-            List<DbProductCategory> categories = result.stream()
-                    .filter(Objects::nonNull)
-                    .map(this::mapToDbProductCategory)
+//            List<DbProductCategory> categories = result.stream()
+//                    .filter(Objects::nonNull)
+//                    .filter(cat -> Boolean.TRUE.equals(cat.getActive())) // ensure root categories are active
+//                    .filter(cat -> cat.getParent() == null)              // only root categories
+//                    .map(this::mapToDbProductCategory)
+//                    .collect(Collectors.toUnmodifiableList());
+
+            List<CategoryEntity> roots = categoryRepository.findAllRootCategoriesWithChildren();
+
+            List<DbProductCategory> categories = roots.stream()
+                    .map(this::mapToDbProductCategory) // recursive, will fetch children
                     .collect(Collectors.toUnmodifiableList());
+
 
             DBPaginatedResult dBPaginatedResult = new DBPaginatedResult(
                     categories.size(),
@@ -168,22 +177,40 @@ public class CategoryServiceImpl implements CategoryService {
 
     }
 
-    private DbProductCategory mapToDbProductCategory(CategoryEntity category) {
+    private List<CategoryEntity> getCategoryChildren(CategoryEntity category) {
 
-        boolean active = category.getActive();
-        if (!active){
+        String categoryId = category.getId();
+        List<CategoryEntity> children = categoryRepository.findSubtree(categoryId);
+        if (children.isEmpty()) {
+            log.warn("No children found for category with ID: {}", categoryId);
+            throw new ContentNotFoundException("No children found for category with ID " + categoryId);
+        }
+        return children;
+    }
+
+    private DbProductCategory mapToDbProductCategory(CategoryEntity category) {
+        boolean active = Boolean.TRUE.equals(category.getActive());
+        if (!active) {
             log.warn("Category with ID {} is inactive", category.getId());
             throw new ContentNotFoundException("Category with ID "
                     + category.getId() +
                     " could not be retrieved as it was deleted.");
         }
 
+        // Recursively map children (only active ones)
+        List<DbProductCategory> childCategories = category.getChildren().stream()
+                .filter(Objects::nonNull)
+                .filter(child -> Boolean.TRUE.equals(child.getActive()))
+                .map(this::mapToDbProductCategory)  // recursion here
+                .collect(Collectors.toList());
+
         return new DbProductCategory(
                 category.getId(),
                 category.getName(),
                 category.getDescription(),
                 category.getPath(),
-                category.getParent() == null ? null : category.getParent().getId()
+                category.getParent() == null ? null : category.getParent().getId(),
+                childCategories
         );
     }
 
@@ -227,18 +254,9 @@ public class CategoryServiceImpl implements CategoryService {
             CategoryEntity saved = categoryRepository.save(categoryEntity);
 
             // Update path correctly
-            if (saved.getParent() != null && dbProductCategory.getPath() != null) {
-
-                System.out.println("----------"+
-                        "Path: " + dbProductCategory.getPath() +
-                                ", Parent ID: " + saved.getParent().getId() +
-                                ", Category ID: " + saved.getId() + ", Path: "
-                );
-
+            if (dbProductCategory.getParentCategoryId() != null) {
                 saved.setPath(saved.getParent().getPath() + saved.getId() + "/");
-
                 categoryRepository.save(saved);
-
             }
 
             log.info("Category updated successfully with ID: {}", categoryId);
