@@ -6,6 +6,7 @@ import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.exception.ConflictException;
 import com.keycloak.common.exception.ContentNotFoundException;
 import com.keycloak.common.reusable.CommonReusable;
+import com.keycloak.common.utils.PathUtils;
 import com.keycloak.products.entity.CategoryEntity;
 import com.keycloak.products.repository.CategoryRepository;
 import com.keycloak.products.service_impl.service.CategoryService;
@@ -36,58 +37,8 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CommonReusable commonReusable;
 
-    /**
-     * Creates a new category under an optional parent.
-     *
-     * @param name     Name of the category.
-     * @param parentId Parent category ID (null for root).
-     * @return The created Category.
-     */
-    public CategoryEntity createCategory(String name, Long parentId) {
-        CategoryEntity categoryEntity = new CategoryEntity();
-        categoryEntity.setName(name);
-
-        if (parentId != null) {
-            CategoryEntity parent = categoryRepository.findById(parentId)
-                    .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
-            categoryEntity.setParent(parent);
-            categoryEntity.setPath(parent.getPath()); // temporary
-        }
-
-        // Save initial to generate ID
-        CategoryEntity saved = categoryRepository.save(categoryEntity);
-
-        // Update path correctly
-        if (saved.getParent() != null) {
-            saved.setPath(saved.getParent().getPath() + saved.getId() + "/");
-        } else {
-            saved.setPath("/" + saved.getId() + "/");
-        }
-
-        return categoryRepository.save(saved);
-    }
-
-    /**
-     * Fetches a category subtree using CTE recursion.
-     */
-    public List<CategoryEntity> getSubtree(String categoryId) {
-        return categoryRepository.findSubtree(categoryId);
-    }
-
-    /**
-     * Fetches a category subtree using materialized path.
-     */
-    public List<CategoryEntity> getSubtreeUsingPath(Long categoryId) {
-        return categoryRepository.findSubtreeByPath(categoryId);
-    }
-
-
-
-
-
-
     @Override
-    public String createCategory(DbProductCategory dbProductCategory) {
+    public DbProductCategory createCategory(DbProductCategory dbProductCategory) {
 
         log.info("Creating category with name: {}", dbProductCategory.getName());
         //Check if the name exists
@@ -112,6 +63,9 @@ public class CategoryServiceImpl implements CategoryService {
                     dbProductCategory.getParentCategoryId()
             ).orElse(null));
         }
+        if (!dbProductCategory.getAttributes().isEmpty()) {
+            category.setAttributes(dbProductCategory.getAttributes());
+        }
         CategoryEntity saved = categoryRepository.save(category);
 
         // Update path correctly
@@ -125,7 +79,9 @@ public class CategoryServiceImpl implements CategoryService {
 
         log.info("Category created successfully with ID: {}", saved.getId());
 
-        return "Category has been created successfully.";
+        dbProductCategory.setId(saved.getId());
+
+        return dbProductCategory;
     }
 
     @Override
@@ -144,15 +100,8 @@ public class CategoryServiceImpl implements CategoryService {
                 throw new ContentNotFoundException("No categories found");
             }
 
-//            List<DbProductCategory> categories = result.stream()
-//                    .filter(Objects::nonNull)
-//                    .filter(cat -> Boolean.TRUE.equals(cat.getActive())) // ensure root categories are active
-//                    .filter(cat -> cat.getParent() == null)              // only root categories
-//                    .map(this::mapToDbProductCategory)
-//                    .collect(Collectors.toUnmodifiableList());
-
             List<CategoryEntity> roots = categoryRepository.findAllRootCategoriesWithChildren();
-
+            
             List<DbProductCategory> categories = roots.stream()
                     .map(this::mapToDbProductCategory) // recursive, will fetch children
                     .collect(Collectors.toUnmodifiableList());
@@ -210,7 +159,8 @@ public class CategoryServiceImpl implements CategoryService {
                 category.getDescription(),
                 category.getPath(),
                 category.getParent() == null ? null : category.getParent().getId(),
-                childCategories
+                childCategories,
+                category.getAttributes()
         );
     }
 
@@ -251,6 +201,11 @@ public class CategoryServiceImpl implements CategoryService {
                         dbProductCategory.getParentCategoryId()
                 ).orElse(null));
             }
+            if (!dbProductCategory.getAttributes().isEmpty()) {
+                //The list that will be updated must be submitted with the new attributes and old attributes removed / maintained in the database
+                categoryEntity.setAttributes(dbProductCategory.getAttributes());
+            }
+
             CategoryEntity saved = categoryRepository.save(categoryEntity);
 
             // Update path correctly
@@ -270,16 +225,90 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public String deleteCategory(String categoryId) {
 
         log.info("Soft Deleting category with ID: {}", categoryId);
-        CategoryEntity categoryEntity = categoryRepository.findById(categoryId)
+        CategoryEntity category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ContentNotFoundException("Category not found"));
-        categoryEntity.setActive(false);
 
-        log.info("Category soft deleted successfully with ID: {}", categoryId);
-        categoryRepository.save(categoryEntity);
+        // Determine if this is a root category
+        boolean isRoot = category.getParent() == null;
+
+        if (isRoot) {
+            handleRootCategorySoftDelete(category);
+        } else {
+            handleNonRootCategorySoftDelete(category);
+        }
+
+        // Finally, mark the category inactive
+        category.setActive(false);
+        categoryRepository.save(category);
+
+        // Remove inactive category from paths of all active descendants
+        updatePathsForActiveDescendants(category);
 
         return "The category has been soft deleted successfully.";
+    }
+
+    private void handleRootCategorySoftDelete(CategoryEntity category) {
+        // Promote immediate children to root
+        String newParentPath = "/"; // root path
+        categoryRepository.bulkUpdateImmediateChildrenParentAndPath(
+                category.getId(),
+                null,
+                newParentPath
+        );
+    }
+
+    private void handleNonRootCategorySoftDelete(CategoryEntity category) {
+        CategoryEntity parent = category.getParent(); // new parent for immediate children
+        String newParentPath = parent != null ? parent.getPath() : "/";
+
+
+        // Update immediate children to point to the parent of the deleted category
+        categoryRepository.bulkUpdateImmediateChildrenParentAndPath(
+                category.getId(),
+                parent,
+                newParentPath
+        );
+    }
+
+    private void updatePathsForActiveDescendants(CategoryEntity category) {
+        List<CategoryEntity> descendants = categoryRepository.findAllActiveDescendants(category.getPath());
+
+        for (CategoryEntity descendant : descendants) {
+            String updatedPath = descendant.getPath().replace("/" + category.getId() + "/", "/");
+            descendant.setPath(updatedPath);
+        }
+
+        categoryRepository.saveAll(descendants);
+    }
+
+
+
+
+    @Override
+    @Transactional
+    public String removeSubCategory(String parentCategoryId, String subCategoryId) {
+
+        CategoryEntity parentCategory = categoryRepository.findById(parentCategoryId)
+                .orElseThrow(() -> new ContentNotFoundException("Parent category not found"));
+
+        CategoryEntity subCategory = categoryRepository.findById(subCategoryId)
+                .orElseThrow(() -> new ContentNotFoundException("Sub-category not found"));
+
+        // Check if it is actually a child of this parent
+        if (!parentCategory.getChildren().remove(subCategory)) {
+            throw new BadRequestException("Sub-category does not belong to the parent category");
+        }
+
+        parentCategory.setPath(null);
+
+        // Save updates (depending on cascade config, child may be orphaned or deleted)
+        categoryRepository.save(parentCategory);
+
+        return "The sub-category has been removed successfully from the parent category.";
+
     }
 }

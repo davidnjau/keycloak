@@ -7,11 +7,11 @@ import java.util.List;
 
 public interface CategoryService {
 
-    String createCategory(DbProductCategory dbProductCategory);
+    DbProductCategory createCategory(DbProductCategory dbProductCategory);
     DBPaginatedResult getAllCategories(int page, int size, String sortBy, String order);
     DbProductCategory getCategoryById(String id);
     DbProductCategory updateCategory(DbProductCategory dbProductCategory, String categoryId);
     String deleteCategory(String id);
-
+    String removeSubCategory(String parentCategoryId, String subCategoryId);
 
 }

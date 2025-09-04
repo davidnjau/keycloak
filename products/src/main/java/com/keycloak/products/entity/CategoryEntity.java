@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -66,6 +67,7 @@ public class CategoryEntity {
      * Materialized path for efficient subtree lookups.
      * Example: /1/2/5/ indicates hierarchy from root -> subcategory -> current.
      */
+    @Column(columnDefinition = "TEXT")
     private String path;
 
     /**
@@ -73,6 +75,14 @@ public class CategoryEntity {
      */
     @Column
     private Boolean active = true;
+
+    /**
+     * Attributes are stored as PostgreSQL text[] array.
+     * Example: {"popular","seasonal","discounted"}
+     */
+    @ElementCollection
+    private List<String> attributes; // or use List<String>
+
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

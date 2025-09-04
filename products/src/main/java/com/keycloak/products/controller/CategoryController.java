@@ -18,10 +18,10 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping("create")
-    public ResponseEntity<ResponseWrapper<String>> createCategory(
+    public ResponseEntity<ResponseWrapper<DbProductCategory>> createCategory(
             @RequestBody DbProductCategory dbProductCategory) {
 
-        String response = categoryService.createCategory(dbProductCategory);
+        DbProductCategory response = categoryService.createCategory(dbProductCategory);
         return ResponseEntity.ok(ResponseWrapper.success(response));
 
     }
@@ -59,6 +59,15 @@ public class CategoryController {
     public ResponseEntity<ResponseWrapper<String>> deleteCategory(
             @PathVariable("categoryId") String categoryId) {
         String response = categoryService.deleteCategory(categoryId);
+        return ResponseEntity.ok(ResponseWrapper.success(response));
+    }
+
+    @DeleteMapping("{parentCategoryId}/subcategory/{subCategoryId}")
+    public ResponseEntity<ResponseWrapper<String>> removeSubCategory(
+            @PathVariable("parentCategoryId") String parentCategoryId,
+            @PathVariable("subCategoryId") String subCategoryId) {
+
+        String response = categoryService.removeSubCategory(parentCategoryId, subCategoryId);
         return ResponseEntity.ok(ResponseWrapper.success(response));
     }
 

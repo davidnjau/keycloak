@@ -4,6 +4,7 @@ import com.keycloak.products.entity.CategoryEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -54,6 +55,24 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
         WHERE c.parent IS NULL AND c.active = true
         """)
     List<CategoryEntity> findAllRootCategoriesWithChildren();
+
+    @Modifying
+    @Query("""
+        UPDATE CategoryEntity c
+        SET c.parent = :newParent,
+            c.path = CONCAT(:newParentPath, c.id, '/')
+        WHERE c.parent.id = :oldParentId
+    """)
+    void bulkUpdateImmediateChildrenParentAndPath(
+            @Param("oldParentId") String oldParentId,
+            @Param("newParent") CategoryEntity newParent,
+            @Param("newParentPath") String newParentPath
+    );
+
+    @Query("SELECT c FROM CategoryEntity c WHERE c.path LIKE CONCAT(:pathPrefix, '%') AND c.active = true")
+    List<CategoryEntity> findAllActiveDescendants(@Param("pathPrefix") String pathPrefix);
+
+    Optional<CategoryEntity> findByIdAndActive(String id, boolean active);
 
     Optional<CategoryEntity> findByNameAndActive(String name, boolean active);
     Optional<CategoryEntity> findByName(String name);
