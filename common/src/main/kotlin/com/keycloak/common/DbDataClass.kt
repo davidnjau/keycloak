@@ -1,5 +1,7 @@
 package com.keycloak.common
 
+import java.math.BigDecimal
+
 
 data class RegisterRequest(
     val username: String,
@@ -71,3 +73,14 @@ enum class IdentifierType {
     USERNAME,
     APPLICATION_ID
 }
+data class DbProduct(
+    val id: String?,
+    val name: String,
+    val description: String,
+    val oldPrice: BigDecimal,
+    val oldPriceCurrency: String,
+    val newPrice: BigDecimal,
+    val newPriceCurrency: String,
+    val quantity: Int,
+    val
+)

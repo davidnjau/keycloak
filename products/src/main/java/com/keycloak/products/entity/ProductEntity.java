@@ -8,13 +8,15 @@ import org.hibernate.annotations.GenericGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Product entity represents items in the catalog.
  * Each product belongs to a category.
  */
 @Entity
-@Table(name = "products")
+@Table(name = "product")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -44,7 +46,7 @@ public class ProductEntity {
     /**
      * Detailed description of the product.
      */
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     /**
@@ -52,6 +54,12 @@ public class ProductEntity {
      */
     @Column(nullable = false)
     private BigDecimal oldPrice;
+
+    /**
+     * Old Price currency.
+     */
+    @Column(nullable = false)
+    private String oldPriceCurrency;
 
 
     /**
@@ -61,10 +69,28 @@ public class ProductEntity {
     private BigDecimal newPrice;
 
     /**
+     * New Price currency.
+     */
+    @Column(nullable = false)
+    private String newPriceCurrency;
+
+    /**
      * Stock Keeping Unit (SKU) identifier.
      */
     @Column(unique = true, nullable = false)
     private String sku;
+
+    /**
+     * Available stock quantity (units not yet reserved).
+     */
+    @Column(nullable = false)
+    private Integer availableQuantity = 0;
+
+    /**
+     * Reserved stock quantity (units reserved in carts/orders).
+     */
+    @Column(nullable = false)
+    private Integer reservedQuantity = 0;
 
     /**
      * Reference to the category this product belongs to.
@@ -72,6 +98,17 @@ public class ProductEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private CategoryEntity categoryEntity;
+
+    /**
+     * Associated product images.
+     */
+    @OneToMany(
+            mappedBy = "product",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<ProductImageEntity> images = new ArrayList<>();
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
