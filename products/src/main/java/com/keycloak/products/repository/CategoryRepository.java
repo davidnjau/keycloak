@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository interface for managing Category persistence.
@@ -40,4 +41,7 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
         WHERE path LIKE CONCAT((SELECT path FROM categories WHERE id = :categoryId), '%')
         """, nativeQuery = true)
     List<CategoryEntity> findSubtreeByPath(@Param("categoryId") Long categoryId);
+
+    Optional<CategoryEntity> findByName(String name);
+    Optional<CategoryEntity> findById(String id);
 }

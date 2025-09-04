@@ -82,5 +82,48 @@ data class DbProduct(
     val newPrice: BigDecimal,
     val newPriceCurrency: String,
     val quantity: Int,
-    val
-)
+    val availableQuantity: Int,
+    val reservedQuantity: Int,
+    val productImages: List<DbProductImage>
+){
+    constructor() : this(null, "", "",
+        BigDecimal.ZERO, "", BigDecimal.ZERO, "",
+        0, 0, 0, emptyList())
+}
+data class DbProductCategory(
+    val id: String?,
+    val name: String?,
+    val description: String?,
+    val path: String?,
+    val parentCategoryId: String?,
+){
+    constructor() : this(null, null, null, null, null)
+}
+data class DbProductImage(
+    val id: String?,
+    val imageUrl: String,
+    val metadata: String,
+    val sortOrder: Int,
+    val storageId: String,
+    val isValid: Boolean,
+    val productId: String
+){
+    constructor() : this(null, "",
+        "", 0, "",
+        false, "")
+}
+data class DBPaginatedResult(
+    val count: Long,
+    val currentPage: Int,
+    val pageSize: Int,
+    val totalPages: Int,
+    val items: List<Any>
+){
+    constructor() : this(
+        0,
+        0,
+        0,
+        0,
+        emptyList()
+    )
+}

@@ -44,6 +44,12 @@ public class CategoryEntity {
     private String name;
 
     /**
+     * Description for accessibility and SEO.
+     */
+    @Column(length = 255)
+    private String description;
+
+    /**
      * Parent category reference. Null for root categories.
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -62,6 +68,12 @@ public class CategoryEntity {
      */
     @Column(nullable = false)
     private String path;
+
+    /**
+     * Indicates whether the category is active or not.
+     */
+    @Column
+    private Boolean active = true;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
