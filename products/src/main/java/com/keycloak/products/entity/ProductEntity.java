@@ -9,7 +9,9 @@ import org.hibernate.annotations.GenericGenerator;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Product entity represents items in the catalog.
@@ -61,43 +63,49 @@ public class ProductEntity {
     @Column(nullable = false)
     private String oldPriceCurrency;
 
-
     /**
      * New Price of the product.
      */
-    @Column(nullable = false)
     private BigDecimal newPrice;
 
     /**
      * New Price currency.
      */
-    @Column(nullable = false)
     private String newPriceCurrency;
 
     /**
      * Stock Keeping Unit (SKU) identifier.
+     * Internal fingerprint within your business
      */
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String sku;
+
+    /**
+     * Indicates whether the product is active or not.
+     */
+    @Column
+    private Boolean active = true;
 
     /**
      * Available stock quantity (units not yet reserved).
      */
-    @Column(nullable = false)
     private Integer availableQuantity = 0;
 
     /**
      * Reserved stock quantity (units reserved in carts/orders).
      */
-    @Column(nullable = false)
     private Integer reservedQuantity = 0;
 
     /**
-     * Reference to the category this product belongs to.
+     * A product can belong to multiple categories.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private CategoryEntity categoryEntity;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "product_category",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<CategoryEntity> categories = new HashSet<>();
 
     /**
      * Associated product images.
@@ -109,6 +117,14 @@ public class ProductEntity {
             fetch = FetchType.LAZY
     )
     private List<ProductImageEntity> images = new ArrayList<>();
+
+    /**
+     * Attributes are stored as PostgreSQL text[] array.
+     * Example: {"popular","seasonal","discounted"}
+     */
+    @ElementCollection
+    private List<String> tags; // or use List<String>
+
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

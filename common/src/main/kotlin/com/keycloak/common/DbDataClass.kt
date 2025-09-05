@@ -75,20 +75,26 @@ enum class IdentifierType {
 }
 data class DbProduct(
     val id: String?,
-    val name: String,
-    val description: String,
-    val oldPrice: BigDecimal,
-    val oldPriceCurrency: String,
-    val newPrice: BigDecimal,
-    val newPriceCurrency: String,
-    val quantity: Int,
-    val availableQuantity: Int,
-    val reservedQuantity: Int,
-    val productImages: List<DbProductImage>
-){
+    val name: String?,
+    val description: String?,
+    val oldPrice: BigDecimal?,
+    val oldPriceCurrency: String?,
+    val newPrice: BigDecimal?,
+    val newPriceCurrency: String?,
+    val availableQuantity: Int?,
+    val reservedQuantity: Int?,
+    val productImages: List<DbProductImage>?,
+    val sku: String?,
+    var tags: List<String>?,
+    var categoryIds: List<String>?,
+    var isActive: Boolean?,
+    ){
     constructor() : this(null, "", "",
-        BigDecimal.ZERO, "", BigDecimal.ZERO, "",
-        0, 0, 0, emptyList())
+        BigDecimal.ZERO, "KES",
+        BigDecimal.ZERO, "KES",
+        0, 0,
+        emptyList(), "",
+        emptyList(), emptyList(), true)
 }
 data class DbProductCategory(
     var id: String?,
@@ -104,17 +110,17 @@ data class DbProductCategory(
         emptyList(), emptyList())
 }
 data class DbProductImage(
-    val id: String?,
-    val imageUrl: String,
-    val metadata: String,
-    val sortOrder: Int,
-    val storageId: String,
-    val isValid: Boolean,
-    val productId: String
+    val id: Long?,
+    val imageUrl: String?,
+    val metadata: String?,
+    val sortOrder: Int?,
+    val storageId: String?,
+    val isValid: Boolean?,
+    val productId: String?
 ){
     constructor() : this(null, "",
         "", 0, "",
-        false, "")
+        false, null)
 }
 data class DBPaginatedResult(
     val count: Long,

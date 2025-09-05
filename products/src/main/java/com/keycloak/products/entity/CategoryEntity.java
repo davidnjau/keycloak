@@ -9,7 +9,9 @@ import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Category entity represents hierarchical categories in the product catalog.
@@ -82,6 +84,13 @@ public class CategoryEntity {
      */
     @ElementCollection
     private List<String> attributes; // or use List<String>
+
+    /**
+     * Products under this category.
+     * Many-to-many mapping through "product_category" join table.
+     */
+    @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
+    private Set<ProductEntity> products = new HashSet<>();
 
 
     @Column(name = "created_at", updatable = false)

@@ -40,10 +40,10 @@ public class ProductImageEntity {
     @Column(nullable = false)
     private String storageId;
 
+
     /**
      * File validity
      */
-    @Column(nullable = false)
     private boolean isValid = true;
 
 

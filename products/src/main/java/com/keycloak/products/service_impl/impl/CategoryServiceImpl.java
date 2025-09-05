@@ -19,10 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -104,7 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
             
             List<DbProductCategory> categories = roots.stream()
                     .map(this::mapToDbProductCategory) // recursive, will fetch children
-                    .collect(Collectors.toUnmodifiableList());
+                    .toList();
 
 
             DBPaginatedResult dBPaginatedResult = new DBPaginatedResult(
@@ -309,6 +306,20 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.save(parentCategory);
 
         return "The sub-category has been removed successfully from the parent category.";
+
+    }
+
+    @Override
+    public List<CategoryEntity> getSubCategories(List<String> categoryIds) {
+
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Fetch all categories in one query (avoids N+1 problem)
+
+        // Map entities -> DTOs
+        return categoryRepository.findAllByIdInAndActiveTrue(categoryIds);
 
     }
 }
