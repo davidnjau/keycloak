@@ -55,9 +55,9 @@ public class CategoryServiceImpl implements CategoryService {
         if (dbProductCategory.getDescription()!= null) {
             category.setDescription(dbProductCategory.getDescription());
         }
-        if (dbProductCategory.getPath()!= null) {
-            category.setPath(dbProductCategory.getPath());
-        }
+//        if (dbProductCategory.getPath()!= null) {
+//            category.setPath(dbProductCategory.getPath());
+//        }
         if (dbProductCategory.getParentCategoryId()!= null) {
             category.setParent(categoryRepository.findById(
                     dbProductCategory.getParentCategoryId()
@@ -69,11 +69,11 @@ public class CategoryServiceImpl implements CategoryService {
         CategoryEntity saved = categoryRepository.save(category);
 
         // Update path correctly
-        if (saved.getParent() != null) {
-            saved.setPath(saved.getParent().getPath() + saved.getId() + "/");
-        } else {
-            saved.setPath("/" + saved.getId() + "/");
-        }
+//        if (saved.getParent() != null) {
+//            saved.setPath(saved.getParent().getPath() + saved.getId() + "/");
+//        } else {
+//            saved.setPath("/" + saved.getId() + "/");
+//        }
 
         categoryRepository.save(saved);
 
@@ -209,10 +209,10 @@ public class CategoryServiceImpl implements CategoryService {
             CategoryEntity saved = categoryRepository.save(categoryEntity);
 
             // Update path correctly
-            if (dbProductCategory.getParentCategoryId() != null) {
-                saved.setPath(saved.getParent().getPath() + saved.getId() + "/");
-                categoryRepository.save(saved);
-            }
+//            if (dbProductCategory.getParentCategoryId() != null) {
+//                saved.setPath(saved.getParent().getPath() + saved.getId() + "/");
+//                categoryRepository.save(saved);
+//            }
 
             log.info("Category updated successfully with ID: {}", categoryId);
             return mapToDbProductCategory(saved);
@@ -279,7 +279,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         for (CategoryEntity descendant : descendants) {
             String updatedPath = descendant.getPath().replace("/" + category.getId() + "/", "/");
-            descendant.setPath(updatedPath);
+//            descendant.setPath(updatedPath);
         }
 
         categoryRepository.saveAll(descendants);
