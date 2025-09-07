@@ -47,7 +47,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update   # use update/validate in dev, NEVER create-drop in prod
+      ddl-auto: create-drop   # use update/validate in dev, NEVER create-drop in prod
     show-sql: false            # disable in prod
     properties:
       hibernate:

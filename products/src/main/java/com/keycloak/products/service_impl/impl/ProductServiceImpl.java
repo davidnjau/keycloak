@@ -44,12 +44,6 @@ public class ProductServiceImpl implements ProductService {
 
         log.info("Creating new product: {}", dbProduct);
 
-        List<ProductImageEntity> imageEntities = Objects
-                .requireNonNull(dbProduct.getProductImages())
-                .stream()
-                .map(this::mapProductImageEntity)
-                .toList();
-
         String sku = dbProduct.getSku();
         if (sku == null || sku.isEmpty()) {
             throw new BadRequestException("Product SKU cannot be null or empty");
@@ -84,15 +78,15 @@ public class ProductServiceImpl implements ProductService {
         }
         if (dbProduct.getSku()!= null) productEntity.setSku(dbProduct.getSku());
         if (dbProduct.getTags()!= null) productEntity.setTags(dbProduct.getTags());
-        if (!imageEntities.isEmpty()) {
-            for (ProductImageEntity image : imageEntities) {
-                image.setProduct(productEntity); // 🔑 set back-reference
-            }
-            productEntity.setImages(imageEntities);
-        }
 
         log.info("Saving product: {}", dbProduct.getName());
         productRepository.save(productEntity);
+
+        //Update Images
+
+
+        updateProductImages("create",productEntity, dbProduct.getProductImages());
+
 
         dbProduct.setId(productEntity.getId());
 
@@ -278,7 +272,7 @@ public class ProductServiceImpl implements ProductService {
             }
 
             //Update Images
-            updateProductImages(productEntity, dbProduct.getProductImages());
+            updateProductImages("update",productEntity, dbProduct.getProductImages());
 
             log.info("Update products -> {}", productEntity.getName());
             productRepository.save(productEntity);
@@ -293,39 +287,73 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
-    private void updateProductImages(ProductEntity productEntity, List<DbProductImage> dbProductImages) {
+    private void updateProductImages(String action, ProductEntity productEntity, List<DbProductImage> dbProductImages) {
         if (dbProductImages == null || dbProductImages.isEmpty()) {
             return;
         }
 
-        for (DbProductImage dbProductImage : dbProductImages) {
-            ProductImageEntity imageEntity = null;
+        switch (action.toLowerCase()) {
+            case "update":
+                for (DbProductImage dbProductImage : dbProductImages) {
+                    ProductImageEntity imageEntity = null;
 
-            // 1. If ID exists, try to find by ID
-            if (dbProductImage.getId() != null) {
-                imageEntity = productImageEntityRepository.findById(dbProductImage.getId()).orElse(null);
-            }
+                    // 1. If ID exists, try to find by ID
+                    if (dbProductImage.getId() != null) {
+                        imageEntity = productImageEntityRepository.findById(dbProductImage.getId()).orElse(null);
+                    }
 
-            // 2. If still not found, try to find by storageId + productId
-            if (imageEntity == null && dbProductImage.getStorageId() != null) {
-                imageEntity = productImageEntityRepository
-                        .findByStorageIdAndProductId(dbProductImage.getStorageId(), productEntity.getId())
-                        .orElse(null);
-            }
+                    // 2. If still not found, try to find by storageId + productId
+                    if (imageEntity == null && dbProductImage.getStorageId() != null) {
+                        imageEntity = productImageEntityRepository
+                                .findByStorageIdAndProductId(dbProductImage.getStorageId(), productEntity.getId())
+                                .orElse(null);
+                    }
 
-            if (imageEntity != null) {
-                // ✅ Update existing entity
-                updateProductImage(imageEntity, dbProductImage);
-            } else {
-                // ✅ Create new
-                imageEntity = mapProductImageEntity(dbProductImage);
-                imageEntity.setProduct(productEntity); // maintain back-reference
-                productEntity.getImages().add(imageEntity); // attach to parent for cascade
-            }
+                    if (imageEntity != null) {
+                        // ✅ Update existing entity
+                        updateProductImage(imageEntity, dbProductImage);
+                    } else {
+                        // ✅ Create new
+                        imageEntity = mapProductImageEntity(dbProductImage);
+                        imageEntity.setProduct(productEntity); // maintain back-reference
+                        productEntity.getImages().add(imageEntity); // attach to parent for cascade
+                    }
+                }
+
+                // ✅ Regularize sort orders after all updates
+                normalizeImageSortOrders(productEntity);
+                break;
+
+            case "create":
+                for (DbProductImage dbProductImage : dbProductImages) {
+                    if (dbProductImage.getStorageId() != null) {
+
+                        // ✅ Prevent duplicates for same product
+                        boolean exists = productEntity.getImages().stream()
+                                .anyMatch(img -> dbProductImage.getStorageId()
+                                        .equals(img.getStorageId()
+                                        )
+                                );
+
+                        if (exists) {
+                            log.warn("Duplicate image ignored for product {} with storageId {}", productEntity.getId(), dbProductImage.getStorageId());
+                            continue; // skip duplicate
+                        }
+
+                        ProductImageEntity newImage = mapProductImageEntity(dbProductImage);
+                        newImage.setProduct(productEntity);
+                        productEntity.getImages().add(newImage);
+                    }
+
+                }
+
+                // ✅ Regularize sort orders after creation
+                normalizeImageSortOrders(productEntity);
+                break;
+
+            default:
+                throw new UnsupportedOperationException("Unsupported action: " + action);
         }
-
-        // ✅ Regularize sort orders after all updates
-        normalizeImageSortOrders(productEntity);
     }
 
     private void updateProductImage(ProductImageEntity productImageEntity, DbProductImage dbProductImage) {

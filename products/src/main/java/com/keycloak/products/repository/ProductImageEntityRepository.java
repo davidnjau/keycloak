@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface ProductImageEntityRepository extends JpaRepository<ProductImageEntity, Long> {
 
     Optional<ProductImageEntity> findByStorageIdAndProductId(String storageId, String productId);
+
 }
