@@ -82,12 +82,12 @@ public class GlobalExceptionHandler {
                         ));
     }
 
-    @ExceptionHandler(ContentNotFoundException.class)
-    public ResponseEntity<String> handleContentNotFound(ContentNotFoundException ex) {
-        log.error("Content not found error: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .body(ex.getMessage());
-
-    }
+//    @ExceptionHandler(ContentNotFoundException.class)
+//    public ResponseEntity<String> handleContentNotFound(ContentNotFoundException ex) {
+//        log.error("Content not found error: {}", ex.getMessage());
+//        return ResponseEntity
+//                .status(HttpStatus.NO_CONTENT)
+//                .body(ex.getMessage());
+//
+//    }
 }

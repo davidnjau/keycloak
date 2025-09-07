@@ -1,16 +1,15 @@
 package com.keycloak.products.service_impl.impl;
 
-import com.keycloak.common.DBPaginatedResult;
-import com.keycloak.common.DbProduct;
-import com.keycloak.common.DbProductCategory;
-import com.keycloak.common.DbProductImage;
+import com.keycloak.common.*;
 import com.keycloak.common.exception.BadRequestException;
+import com.keycloak.common.exception.ConflictException;
 import com.keycloak.common.exception.ContentNotFoundException;
 import com.keycloak.common.reusable.CommonReusable;
 import com.keycloak.products.entity.CategoryEntity;
 import com.keycloak.products.entity.ProductEntity;
 import com.keycloak.products.entity.ProductImageEntity;
 import com.keycloak.products.repository.CategoryRepository;
+import com.keycloak.products.repository.ProductImageEntityRepository;
 import com.keycloak.products.repository.ProductRepository;
 import com.keycloak.products.service_impl.service.CategoryService;
 import com.keycloak.products.service_impl.service.ProductService;
@@ -35,6 +34,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductImageEntityRepository productImageEntityRepository;
     private final CategoryService categoryService;
     private final CommonReusable commonReusable;
 
@@ -43,43 +43,58 @@ public class ProductServiceImpl implements ProductService {
     public DbProduct createProduct(DbProduct dbProduct) {
 
         log.info("Creating new product: {}", dbProduct);
+
         List<ProductImageEntity> imageEntities = Objects
                 .requireNonNull(dbProduct.getProductImages())
                 .stream()
                 .map(this::mapProductImageEntity)
                 .toList();
 
+        String sku = dbProduct.getSku();
+        if (sku == null || sku.isEmpty()) {
+            throw new BadRequestException("Product SKU cannot be null or empty");
+        }
+        Optional<ProductEntity> optionalSku = productRepository.findBySku(sku);
+        if (optionalSku.isPresent()) {
+            throw new ConflictException("Product SKU already exists: " + sku);
+        }
+
         log.info("Creating images for product: {}", dbProduct.getName());
         //Get the category entities from the category ids
         List<CategoryEntity> categoryEntities = categoryService.getSubCategories(dbProduct.getCategoryIds());
 
         // Convert List -> Set
-        Set<CategoryEntity> categories = new HashSet<>(categoryEntities);
 
         ProductEntity productEntity = new ProductEntity();
         // Map the DbProduct to ProductEntity
         // Set the product entity properties
         // Save the product entity to the database
-        productEntity.setName(dbProduct.getName());
-        productEntity.setDescription(dbProduct.getDescription());
-        productEntity.setOldPrice(dbProduct.getOldPrice());
-        productEntity.setOldPriceCurrency(dbProduct.getOldPriceCurrency());
-        productEntity.setNewPrice(dbProduct.getNewPrice());
-        productEntity.setNewPriceCurrency(dbProduct.getNewPriceCurrency());
-        productEntity.setAvailableQuantity(dbProduct.getAvailableQuantity());
-        productEntity.setReservedQuantity(dbProduct.getReservedQuantity());
-        productEntity.setCategories(categories);
-        productEntity.setSku(dbProduct.getSku());
 
-        productEntity.setTags(dbProduct.getTags());
+        if (dbProduct.getName() != null) productEntity.setName(dbProduct.getName());
+        if (dbProduct.getDescription()!= null) productEntity.setDescription(dbProduct.getDescription());
+        if (dbProduct.getOldPrice()!= null) productEntity.setOldPrice(dbProduct.getOldPrice());
+        if (dbProduct.getOldPriceCurrency()!= null) productEntity.setOldPriceCurrency(dbProduct.getOldPriceCurrency());
+        if (dbProduct.getNewPrice()!= null) productEntity.setNewPrice(dbProduct.getNewPrice());
+        if (dbProduct.getNewPriceCurrency()!= null) productEntity.setNewPriceCurrency(dbProduct.getNewPriceCurrency());
+        if (dbProduct.getAvailableQuantity()!= null) productEntity.setAvailableQuantity(dbProduct.getAvailableQuantity());
+        if (dbProduct.getReservedQuantity()!= null) productEntity.setReservedQuantity(dbProduct.getReservedQuantity());
+        if (!categoryEntities.isEmpty()){
+            Set<CategoryEntity> categories = new HashSet<>(categoryEntities);
+            productEntity.setCategories(categories);
+        }
+        if (dbProduct.getSku()!= null) productEntity.setSku(dbProduct.getSku());
+        if (dbProduct.getTags()!= null) productEntity.setTags(dbProduct.getTags());
+        if (!imageEntities.isEmpty()) {
+            for (ProductImageEntity image : imageEntities) {
+                image.setProduct(productEntity); // 🔑 set back-reference
+            }
+            productEntity.setImages(imageEntities);
+        }
 
         log.info("Saving product: {}", dbProduct.getName());
+        productRepository.save(productEntity);
 
-        ProductEntity savedProductEntity = productRepository.save(productEntity);
-        savedProductEntity.setImages(imageEntities);
-
-        log.info("Product saved with ID: {}", savedProductEntity.getId());
-        productRepository.save(savedProductEntity);
+        dbProduct.setId(productEntity.getId());
 
         return dbProduct;
     }
@@ -93,7 +108,8 @@ public class ProductServiceImpl implements ProductService {
         entity.setAltText(dbImage.getMetadata());
         entity.setSortOrder(dbImage.getSortOrder());
         entity.setStorageId(dbImage.getStorageId());
-        entity.setValid(Boolean.TRUE.equals(dbImage.isValid()));
+        Boolean isValid = dbImage.isValid();
+        entity.setValid(isValid == null || isValid);
 
         // If ProductImageEntity has a relation back to ProductEntity, set it later
         return entity;
@@ -208,51 +224,139 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public DbProduct updateProduct(DbProduct dbProduct, String productId) {
 
-        log.info("Updating product with ID: {}", productId);
-
         Optional<ProductEntity> optionalProductEntity = productRepository.findById(productId);
         if (optionalProductEntity.isEmpty()){
             getProductNotFound(productId);
             throw new ContentNotFoundException("Product not found");
         }
-        ProductEntity productEntity = optionalProductEntity.get();
+        try{
 
-        if (dbProduct.getName()!= null) productEntity.setName(dbProduct.getName());
-        if (dbProduct.getDescription()!= null) productEntity.setDescription(dbProduct.getDescription());
-        if (dbProduct.getOldPrice()!= null) productEntity.setOldPrice(dbProduct.getOldPrice());
-        if (dbProduct.getOldPriceCurrency()!= null) productEntity.setOldPriceCurrency(dbProduct.getOldPriceCurrency());
-        if (dbProduct.getNewPrice()!= null) productEntity.setNewPrice(dbProduct.getNewPrice());
-        if (dbProduct.getNewPriceCurrency()!= null) productEntity.setNewPriceCurrency(dbProduct.getNewPriceCurrency());
-        if (dbProduct.getAvailableQuantity()!= null) productEntity.setAvailableQuantity(dbProduct.getAvailableQuantity());
-        if (dbProduct.getReservedQuantity()!= null) productEntity.setReservedQuantity(dbProduct.getReservedQuantity());
-        if (dbProduct.getSku()!= null) productEntity.setSku(dbProduct.getSku());
-        if (dbProduct.getTags()!= null) productEntity.setTags(dbProduct.getTags());
-        if (dbProduct.isActive() != null) productEntity.setActive(Boolean.TRUE.equals(dbProduct.isActive()));
+            log.info("Updating product with ID: {}", productId);
+            ProductEntity productEntity = optionalProductEntity.get();
 
-        if (dbProduct.getProductImages()!= null) {
+            if (dbProduct.getName()!= null) productEntity.setName(dbProduct.getName());
+            if (dbProduct.getDescription()!= null) productEntity.setDescription(dbProduct.getDescription());
+            if (dbProduct.getOldPrice()!= null) productEntity.setOldPrice(dbProduct.getOldPrice());
+            if (dbProduct.getOldPriceCurrency()!= null) productEntity.setOldPriceCurrency(dbProduct.getOldPriceCurrency());
+            if (dbProduct.getNewPrice()!= null) productEntity.setNewPrice(dbProduct.getNewPrice());
+            if (dbProduct.getNewPriceCurrency()!= null) productEntity.setNewPriceCurrency(dbProduct.getNewPriceCurrency());
+            if (dbProduct.getAvailableQuantity()!= null) productEntity.setAvailableQuantity(dbProduct.getAvailableQuantity());
+            if (dbProduct.getReservedQuantity()!= null) productEntity.setReservedQuantity(dbProduct.getReservedQuantity());
+            if (dbProduct.getSku()!= null) productEntity.setSku(dbProduct.getSku());
+            if (dbProduct.isActive() != null) productEntity.setActive(Boolean.TRUE.equals(dbProduct.isActive()));
 
-            List<DbProductImage> imageList = dbProduct.getProductImages();
-            for (int i = 0; i < imageList.size(); i++) {
-                ProductImageEntity productImageEntity = getProductImageEntity(imageList, i);
+            productRepository.save(productEntity);
 
-                productEntity.getImages().add(productImageEntity);
+            // ✅ Merge Tags
+            if (dbProduct.getTags() != null) {
+                List<String> updateTagList = dbProduct.getTags();
+                List<String> currentTagList = productEntity.getTags();
+
+                // Initialize mutable if null
+                if (currentTagList == null) {
+                    currentTagList = new ArrayList<>();
+                    productEntity.setTags(currentTagList);
+                }
+
+                // Add missing tags
+                for (String tag : updateTagList) {
+                    if (!currentTagList.contains(tag)) {
+                        currentTagList.add(tag);
+                    }
+                }
+
+                // Remove tags that are no longer present
+                currentTagList.removeIf(tag -> !updateTagList.contains(tag));
             }
 
+            // ✅ Merge Categories
+            if (dbProduct.getCategoryIds() != null && !dbProduct.getCategoryIds().isEmpty()) {
+                List<CategoryEntity> categoryList = categoryService.getSubCategories(dbProduct.getCategoryIds());
+                if (!categoryList.isEmpty()) {
+                    productEntity.getCategories().addAll(categoryList);
+                }
+            }
+
+            //Update Images
+            updateProductImages(productEntity, dbProduct.getProductImages());
+
+            log.info("Update products -> {}", productEntity.getName());
+            productRepository.save(productEntity);
+
+
+            return dbProduct;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
-        if (dbProduct.getCategoryIds()!= null){
 
-            List<String> categoryIds = dbProduct.getCategoryIds();
-            List<CategoryEntity> categoryList = categoryService.getSubCategories(categoryIds);
-            if (!categoryList.isEmpty()){
-                productEntity.getCategories().addAll(categoryList);
+    }
+
+    private void updateProductImages(ProductEntity productEntity, List<DbProductImage> dbProductImages) {
+        if (dbProductImages == null || dbProductImages.isEmpty()) {
+            return;
+        }
+
+        for (DbProductImage dbProductImage : dbProductImages) {
+            ProductImageEntity imageEntity = null;
+
+            // 1. If ID exists, try to find by ID
+            if (dbProductImage.getId() != null) {
+                imageEntity = productImageEntityRepository.findById(dbProductImage.getId()).orElse(null);
+            }
+
+            // 2. If still not found, try to find by storageId + productId
+            if (imageEntity == null && dbProductImage.getStorageId() != null) {
+                imageEntity = productImageEntityRepository
+                        .findByStorageIdAndProductId(dbProductImage.getStorageId(), productEntity.getId())
+                        .orElse(null);
+            }
+
+            if (imageEntity != null) {
+                // ✅ Update existing entity
+                updateProductImage(imageEntity, dbProductImage);
+            } else {
+                // ✅ Create new
+                imageEntity = mapProductImageEntity(dbProductImage);
+                imageEntity.setProduct(productEntity); // maintain back-reference
+                productEntity.getImages().add(imageEntity); // attach to parent for cascade
             }
         }
 
-        log.info("Update products");
-        productRepository.save(productEntity);
+        // ✅ Regularize sort orders after all updates
+        normalizeImageSortOrders(productEntity);
+    }
 
-        return dbProduct;
+    private void updateProductImage(ProductImageEntity productImageEntity, DbProductImage dbProductImage) {
+        if (dbProductImage.getImageUrl() != null) productImageEntity.setUrl(dbProductImage.getImageUrl());
+        if (dbProductImage.getMetadata() != null) productImageEntity.setAltText(dbProductImage.getMetadata());
+        if (dbProductImage.getSortOrder() != null) productImageEntity.setSortOrder(dbProductImage.getSortOrder());
+        if (dbProductImage.getStorageId() != null) productImageEntity.setStorageId(dbProductImage.getStorageId());
+        if (dbProductImage.isValid() != null) productImageEntity.setValid(Boolean.TRUE.equals(dbProductImage.isValid()));
+        productImageEntityRepository.save(productImageEntity);
+    }
+
+    /**
+     * Ensures unique, sequential sort orders for all images under a product.
+     * Example: 1,2,3...N with no gaps or duplicates.
+     */
+    private void normalizeImageSortOrders(ProductEntity productEntity) {
+        List<ProductImageEntity> images = new ArrayList<>(productEntity.getImages());
+
+        // Sort by current sortOrder (nulls last)
+        images.sort(Comparator.comparing(
+                ProductImageEntity::getSortOrder,
+                Comparator.nullsLast(Integer::compareTo)
+        ));
+
+        int order = 1;
+        for (ProductImageEntity image : images) {
+            image.setSortOrder(order++);
+        }
+
+        // Persist normalized sort orders
+        productImageEntityRepository.saveAll(images);
     }
 
     @NotNull
@@ -291,12 +395,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public String addProductToCategory(String productId, List<String> categoryIds) {
+    public String addProductToCategory(String productId, DbCategories dbCategories) {
+
+        List<String> categoryIds = dbCategories.getCategories();
 
         log.info("Adding product with ID: {} to category with ID: {}", productId, categoryIds);
         // Add code to add product to category
 
         getFetchProductAndCategoryEntitiesLog();
+
         Optional<ProductEntity> optionalProductEntity = productRepository.findById(productId);
         if (optionalProductEntity.isEmpty()){
             getProductNotFound(productId);
@@ -335,7 +442,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public String removeProductFromCategory(String productId, List<String> categoryIds) {
+    public String removeProductFromCategory(String productId, DbCategories dbCategories) {
+
+        List<String> categoryIds = dbCategories.getCategories();
 
         log.info("Removing product with ID: {} from category with ID: {}", productId, categoryIds);
         // Add code to remove product from category

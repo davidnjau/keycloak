@@ -74,7 +74,7 @@ enum class IdentifierType {
     APPLICATION_ID
 }
 data class DbProduct(
-    val id: String?,
+    var id: String?,
     val name: String?,
     val description: String?,
     val oldPrice: BigDecimal?,
@@ -94,7 +94,7 @@ data class DbProduct(
         BigDecimal.ZERO, "KES",
         0, 0,
         emptyList(), "",
-        emptyList(), emptyList(), true)
+        emptyList(), emptyList(), null)
 }
 data class DbProductCategory(
     var id: String?,
@@ -110,18 +110,14 @@ data class DbProductCategory(
         emptyList(), emptyList())
 }
 data class DbProductImage(
-    val id: Long?,
-    val imageUrl: String?,
-    val metadata: String?,
-    val sortOrder: Int?,
-    val storageId: String?,
-    val isValid: Boolean?,
-    val productId: String?
-){
-    constructor() : this(null, "",
-        "", 0, "",
-        false, null)
-}
+    val id: Long? = null,
+    val imageUrl: String? = "",
+    val metadata: String? = "",
+    val sortOrder: Int? = 0,
+    val storageId: String? = "",
+    val isValid: Boolean? = null, // default true
+    val productId: String? = null
+)
 data class DBPaginatedResult(
     val count: Long,
     val currentPage: Int,
@@ -137,3 +133,6 @@ data class DBPaginatedResult(
         emptyList()
     )
 }
+data class DbCategories(
+    var categories: List<String>
+)

@@ -44,7 +44,7 @@ public class ProductImageEntity {
     /**
      * File validity
      */
-    private boolean isValid = true;
+    private boolean isValid;
 
 
     /**
