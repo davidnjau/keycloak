@@ -9,6 +9,7 @@ import com.keycloak.auth.config.KeycloakProperties;
 import com.keycloak.common.*;
 import com.keycloak.common.exception.InternalServerException;
 import com.keycloak.common.exception.UserNotFoundException;
+import com.keycloak.common.redis.RedisCacheService;
 import com.keycloak.common.validation.UserInputValidator;
 import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.exception.ConflictException;
@@ -37,6 +38,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.core.Response;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -54,10 +56,9 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
      */
 
     private final KeycloakProperties keycloakProperties;
-//    private final Keycloak keycloak; // Injected as a @Bean
     private final KeycloakConfig keycloak; // Injected as a @Bean
-    private final RedisTemplate<String, Object> redisTemplate;
     private final UserInputValidator userInputValidator;
+    private final RedisCacheService redisCacheService;
 
     /**
      * Registers a new user in the Keycloak system.
@@ -693,7 +694,7 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
      */
     private void updateUserCache(String userId) {
         log.info("Deleting user cache: {}", userId);
-        redisTemplate.delete(userId);
+        redisCacheService.delete(userId);
         // Store in cache (saves full ApiResponse object containing User)
         fetchUserInfoFromKeycloak(userId);
     }
@@ -781,11 +782,15 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
      * @throws BadRequestException If the user is not found in Keycloak.
      */
     protected UserInfoResponse fetchUserInfoFromKeycloak(String userId) {
-        String cacheKey = "user:" + userId;
 
         // 1. Check Redis cache
-        UserInfoResponse cachedUser = (UserInfoResponse)
-                redisTemplate.opsForValue().get(cacheKey);
+        UserInfoResponse cachedUser =redisCacheService.getWithAliases(
+                "auth:user",
+                "uuid",
+                userId,
+                UserInfoResponse.class
+        );
+
         if (cachedUser != null) {
             log.info("User info fetched from Redis cache: {}", userId);
             return cachedUser;
@@ -816,7 +821,16 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
 
         // 3. Save in Redis with TTL (optional: 1 hour here)
         log.info("User info saved in Redis cache: {}", userId);
-        redisTemplate.opsForValue().set(cacheKey, userInfo, 1, TimeUnit.HOURS);
+        redisCacheService.storeWithAliases(
+                "auth:user",
+                userId,
+                userInfo,
+                Map.of(
+                        "username",userInfo.getUsername(),
+                        "email", userInfo.getEmail()
+                ),
+                Duration.ofHours(1)
+        );
 
         return userInfo;
     }

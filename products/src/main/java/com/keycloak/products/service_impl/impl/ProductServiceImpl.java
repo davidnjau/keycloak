@@ -36,7 +36,6 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductImageEntityRepository productImageEntityRepository;
-//    private final CategoryService categoryService;
     private final CommonReusable commonReusable;
     private final ProductMapper productMapper;
     private final CategoryRepository categoryRepository;
