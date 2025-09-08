@@ -693,9 +693,6 @@ public class KeycloakAuthServiceImpl implements KeycloakAuthService{
      *               This should be a valid Keycloak user ID.
      */
     private void updateUserCache(String userId) {
-        log.info("Deleting user cache: {}", userId);
-        redisCacheService.delete(userId);
-        // Store in cache (saves full ApiResponse object containing User)
         fetchUserInfoFromKeycloak(userId);
     }
 
