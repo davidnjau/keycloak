@@ -3,6 +3,7 @@ package com.keycloak.products.service_impl.service;
 import com.keycloak.common.DBPaginatedResult;
 import com.keycloak.common.DbCategories;
 import com.keycloak.common.DbProduct;
+import com.keycloak.products.entity.ProductEntity;
 
 import java.util.List;
 

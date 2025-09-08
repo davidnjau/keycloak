@@ -13,6 +13,7 @@ import com.keycloak.products.repository.ProductImageEntityRepository;
 import com.keycloak.products.repository.ProductRepository;
 import com.keycloak.products.service_impl.service.CategoryService;
 import com.keycloak.products.service_impl.service.ProductService;
+import com.keycloak.products.utility.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -35,8 +36,10 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductImageEntityRepository productImageEntityRepository;
-    private final CategoryService categoryService;
+//    private final CategoryService categoryService;
     private final CommonReusable commonReusable;
+    private final ProductMapper productMapper;
+    private final CategoryRepository categoryRepository;
 
 
     @Override
@@ -55,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
 
         log.info("Creating images for product: {}", dbProduct.getName());
         //Get the category entities from the category ids
-        List<CategoryEntity> categoryEntities = categoryService.getSubCategories(dbProduct.getCategoryIds());
+        List<CategoryEntity> categoryEntities = getSubCategories(dbProduct.getCategoryIds());
 
         // Convert List -> Set
 
@@ -93,6 +96,19 @@ public class ProductServiceImpl implements ProductService {
         return dbProduct;
     }
 
+    private List<CategoryEntity> getSubCategories(List<String> categoryIds) {
+
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Fetch all categories in one query (avoids N+1 problem)
+
+        // Map entities -> DTOs
+        return categoryRepository.findAllByIdInAndActiveTrue(categoryIds);
+
+    }
+
     private ProductImageEntity mapProductImageEntity(@NotNull DbProductImage dbImage) {
 
         log.info("Mapping DbProductImage to ProductImageEntity: {}", dbImage);
@@ -126,9 +142,9 @@ public class ProductServiceImpl implements ProductService {
                 throw new ContentNotFoundException("No products found");
             }
 
-            List<DbProduct> dbProductList = result.getContent().stream()
-                    .map(this::mapProductEntityToDbProduct)
-                   .toList();
+            List<DbProduct> dbProductList =result.getContent().stream()
+                    .map(productMapper::mapProductEntityToDbProduct)
+                    .toList();
 
             log.info("Returning products: {}", dbProductList.size());
 
@@ -150,37 +166,6 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
-    private DbProduct mapProductEntityToDbProduct(ProductEntity productEntity) {
-
-        log.info("Mapping ProductEntity to DbProduct: {}", productEntity);
-
-        List<DbProductImage> productImages = productEntity.getImages().stream()
-                .map(this::mapProductImageEntityToDbProductImage)
-                .collect(Collectors.toList());
-
-        Set<CategoryEntity> categories = productEntity.getCategories();
-        List<String> categoryIds = categories.stream()
-                .map(CategoryEntity::getId)
-                .toList();
-
-        return new DbProduct(
-                productEntity.getId(),
-                productEntity.getName(),
-                productEntity.getDescription(),
-                productEntity.getOldPrice(),
-                productEntity.getOldPriceCurrency(),
-                productEntity.getNewPrice(),
-                productEntity.getNewPriceCurrency(),
-                productEntity.getAvailableQuantity(),
-                productEntity.getReservedQuantity(),
-                productImages,
-                productEntity.getSku(),
-                productEntity.getTags(),
-                categoryIds,
-                productEntity.getActive()
-        );
-
-    }
 
     private DbProductImage mapProductImageEntityToDbProductImage(ProductImageEntity productImageEntity) {
 
@@ -207,7 +192,8 @@ public class ProductServiceImpl implements ProductService {
             getProductNotFound(productId);
             throw new ContentNotFoundException("Product not found");
         }
-        return mapProductEntityToDbProduct(optionalProductEntity.get());
+
+        return productMapper.mapProductEntityToDbProduct(optionalProductEntity.get());
 
     }
 
@@ -265,7 +251,7 @@ public class ProductServiceImpl implements ProductService {
 
             // ✅ Merge Categories
             if (dbProduct.getCategoryIds() != null && !dbProduct.getCategoryIds().isEmpty()) {
-                List<CategoryEntity> categoryList = categoryService.getSubCategories(dbProduct.getCategoryIds());
+                List<CategoryEntity> categoryList = getSubCategories(dbProduct.getCategoryIds());
                 if (!categoryList.isEmpty()) {
                     productEntity.getCategories().addAll(categoryList);
                 }
@@ -440,7 +426,7 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity productEntity = optionalProductEntity.get();
 
         getFetchCategoryEntitiesLogs();
-        List<CategoryEntity> categoryEntities = categoryService.getSubCategories(categoryIds);
+        List<CategoryEntity> categoryEntities = getSubCategories(categoryIds);
         if (categoryEntities.isEmpty()){
             getCategoryErrorLog(categoryIds);
             throw new ContentNotFoundException("No category found");
@@ -486,7 +472,7 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity productEntity = optionalProductEntity.get();
 
         getFetchCategoryEntitiesLogs();
-        List<CategoryEntity> categoryEntities = categoryService.getSubCategories(categoryIds);
+        List<CategoryEntity> categoryEntities = getSubCategories(categoryIds);
         if (categoryEntities.isEmpty()){
             getCategoryErrorLog(categoryIds);
             throw new ContentNotFoundException("No category found");
@@ -504,6 +490,9 @@ public class ProductServiceImpl implements ProductService {
 
         return "Product has been removed from category";
     }
+
+
+
 
 
 }

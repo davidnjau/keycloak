@@ -1,6 +1,7 @@
 package com.keycloak.products.service_impl.impl;
 
 import com.keycloak.common.DBPaginatedResult;
+import com.keycloak.common.DbProduct;
 import com.keycloak.common.DbProductCategory;
 import com.keycloak.common.exception.BadRequestException;
 import com.keycloak.common.exception.ConflictException;
@@ -8,8 +9,12 @@ import com.keycloak.common.exception.ContentNotFoundException;
 import com.keycloak.common.reusable.CommonReusable;
 import com.keycloak.common.utils.PathUtils;
 import com.keycloak.products.entity.CategoryEntity;
+import com.keycloak.products.entity.ProductEntity;
 import com.keycloak.products.repository.CategoryRepository;
 import com.keycloak.products.service_impl.service.CategoryService;
+import com.keycloak.products.service_impl.service.ProductService;
+import com.keycloak.products.utility.CategoryMapper;
+import com.keycloak.products.utility.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,6 +38,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CommonReusable commonReusable;
+    private final ProductMapper productMapper;
+    private final CategoryMapper categoryMapper;
 
     @Override
     public DbProductCategory createCategory(DbProductCategory dbProductCategory) {
@@ -52,17 +59,18 @@ public class CategoryServiceImpl implements CategoryService {
         if (dbProductCategory.getDescription()!= null) {
             category.setDescription(dbProductCategory.getDescription());
         }
-//        if (dbProductCategory.getPath()!= null) {
-//            category.setPath(dbProductCategory.getPath());
-//        }
+
         if (dbProductCategory.getParentCategoryId()!= null) {
             category.setParent(categoryRepository.findById(
                     dbProductCategory.getParentCategoryId()
             ).orElse(null));
         }
-        if (!dbProductCategory.getAttributes().isEmpty()) {
+
+        // Set attributes if provided
+        if (dbProductCategory.getAttributes() != null &&!dbProductCategory.getAttributes().isEmpty()) {
             category.setAttributes(dbProductCategory.getAttributes());
         }
+
         CategoryEntity saved = categoryRepository.save(category);
 
         // Update path correctly
@@ -100,7 +108,7 @@ public class CategoryServiceImpl implements CategoryService {
             List<CategoryEntity> roots = categoryRepository.findAllRootCategoriesWithChildren();
             
             List<DbProductCategory> categories = roots.stream()
-                    .map(this::mapToDbProductCategory) // recursive, will fetch children
+                    .map(categoryMapper::mapToDbProductCategory) // recursive, will fetch children
                     .toList();
 
 
@@ -147,8 +155,14 @@ public class CategoryServiceImpl implements CategoryService {
         List<DbProductCategory> childCategories = category.getChildren().stream()
                 .filter(Objects::nonNull)
                 .filter(child -> Boolean.TRUE.equals(child.getActive()))
-                .map(this::mapToDbProductCategory)  // recursion here
+                .map(categoryMapper::mapToDbProductCategory)  // recursion here
                 .collect(Collectors.toList());
+
+        Set<ProductEntity> productEntities = category.getProducts();
+
+        List<DbProduct> dbProductList =productEntities.stream()
+                .map(productMapper::mapProductEntityToDbProduct)
+                .toList();
 
         return new DbProductCategory(
                 category.getId(),
@@ -157,7 +171,8 @@ public class CategoryServiceImpl implements CategoryService {
                 category.getPath(),
                 category.getParent() == null ? null : category.getParent().getId(),
                 childCategories,
-                category.getAttributes()
+                category.getAttributes(),
+                dbProductList
         );
     }
 
@@ -174,7 +189,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         log.info("Successfully fetched category with ID: {}", id);
-        return mapToDbProductCategory(categoryEntity.get());
+        return categoryMapper.mapToDbProductCategory(categoryEntity.get());
 
     }
 
@@ -212,7 +227,7 @@ public class CategoryServiceImpl implements CategoryService {
 //            }
 
             log.info("Category updated successfully with ID: {}", categoryId);
-            return mapToDbProductCategory(saved);
+            return categoryMapper.mapToDbProductCategory(saved);
 
         }catch (Exception exception){
             log.error("Error updating category: {}", exception.getMessage());

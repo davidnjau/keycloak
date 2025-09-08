@@ -102,12 +102,13 @@ data class DbProductCategory(
     val description: String?,
     val path: String?,
     val parentCategoryId: String?,
-    val subCategory: List<DbProductCategory>,
-    val attributes: List<String>,
+    val subCategory: List<DbProductCategory>?,
+    val attributes: List<String>?,
+    var products: List<DbProduct>?,
 ){
     constructor() : this(null, null,
         null, null, null,
-        emptyList(), emptyList())
+        emptyList(), emptyList(), emptyList())
 }
 data class DbProductImage(
     val id: Long? = null,
