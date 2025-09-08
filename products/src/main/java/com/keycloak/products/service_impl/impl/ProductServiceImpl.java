@@ -490,8 +490,4 @@ public class ProductServiceImpl implements ProductService {
         return "Product has been removed from category";
     }
 
-
-
-
-
 }
